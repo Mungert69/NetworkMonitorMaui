@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using Microsoft.Maui.Controls;
+  using System.Reflection;
 
 namespace NetworkMonitor.Maui;
 
@@ -34,7 +35,9 @@ public class RootNamespaceService
         }
     }
 
-  public static IServiceProvider ServiceProvider
+
+
+public static IServiceProvider ServiceProvider
 {
     get
     {
@@ -109,6 +112,7 @@ public class RootNamespaceService
         }
     }
 }
+
 
    public static int GetDrawableResourceId(string resourceName, int defaultResourceId = 0)
 {
