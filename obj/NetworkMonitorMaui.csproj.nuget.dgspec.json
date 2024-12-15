@@ -1,0 +1,333 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/mahadeva/code/NetworkMonitorMaui/NetworkMonitorMaui.csproj": {}
+  },
+  "projects": {
+    "/home/mahadeva/code/NetworkMonitor/NetworkMonitor-Maui.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mahadeva/code/NetworkMonitor/NetworkMonitor-Maui.csproj",
+        "projectName": "NetworkMonitor-Maui",
+        "projectPath": "/home/mahadeva/code/NetworkMonitor/NetworkMonitor-Maui.csproj",
+        "packagesPath": "/home/mahadeva/.nuget/packages/",
+        "outputPath": "/home/mahadeva/code/NetworkMonitor/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/mahadeva/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "/usr/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "all"
+        },
+        "SdkAnalysisLevel": "9.0.100"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Betalgo.OpenAI": {
+              "target": "Package",
+              "version": "[8.7.2, )"
+            },
+            "MetroLog.Net6": {
+              "target": "Package",
+              "version": "[2.1.0, )"
+            },
+            "Microsoft.CodeAnalysis.CSharp": {
+              "target": "Package",
+              "version": "[4.12.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[8.0.11, )"
+            },
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Binder": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.CommandLine": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.EnvironmentVariables": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.IdentityModel.Tokens": {
+              "target": "Package",
+              "version": "[8.2.1, )"
+            },
+            "Nanoid": {
+              "target": "Package",
+              "version": "[3.1.0, )"
+            },
+            "Nito.AsyncEx": {
+              "target": "Package",
+              "version": "[5.1.2, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "PuppeteerSharp": {
+              "target": "Package",
+              "version": "[20.0.5, )"
+            },
+            "RabbitMQ.Client": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "RestSharp": {
+              "target": "Package",
+              "version": "[112.1.0, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.2.1, )"
+            },
+            "bouncycastle.cryptography": {
+              "target": "Package",
+              "version": "[2.4.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/mahadeva/code/NetworkMonitorMaui/NetworkMonitorMaui.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mahadeva/code/NetworkMonitorMaui/NetworkMonitorMaui.csproj",
+        "projectName": "NetworkMonitorMaui",
+        "projectPath": "/home/mahadeva/code/NetworkMonitorMaui/NetworkMonitorMaui.csproj",
+        "packagesPath": "/home/mahadeva/.nuget/packages/",
+        "outputPath": "/home/mahadeva/code/NetworkMonitorMaui/obj/",
+        "projectStyle": "PackageReference",
+        "crossTargeting": true,
+        "configFilePaths": [
+          "/home/mahadeva/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0-android"
+        ],
+        "sources": {
+          "/usr/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0-android35.0": {
+            "targetAlias": "net9.0-android",
+            "projectReferences": {
+              "/home/mahadeva/code/NetworkMonitor/NetworkMonitor-Maui.csproj": {
+                "projectPath": "/home/mahadeva/code/NetworkMonitor/NetworkMonitor-Maui.csproj"
+              },
+              "/home/mahadeva/code/NetworkMonitorProcessor/NetworkMonitorProcessor-Maui.csproj": {
+                "projectPath": "/home/mahadeva/code/NetworkMonitorProcessor/NetworkMonitorProcessor-Maui.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "all"
+        },
+        "SdkAnalysisLevel": "9.0.100"
+      },
+      "frameworks": {
+        "net9.0-android35.0": {
+          "targetAlias": "net9.0-android",
+          "dependencies": {
+            "CommunityToolkit.Maui": {
+              "target": "Package",
+              "version": "[9.1.1, )"
+            },
+            "MetroLog.Maui": {
+              "target": "Package",
+              "version": "[2.1.0, )"
+            },
+            "Microsoft.Extensions.Logging.Debug": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Maui.Controls": {
+              "target": "Package",
+              "version": "[9.0.21, )"
+            },
+            "Microsoft.Maui.Controls.Compatibility": {
+              "target": "Package",
+              "version": "[9.0.21, )"
+            },
+            "Microsoft.Maui.Core": {
+              "target": "Package",
+              "version": "[9.0.21, )"
+            },
+            "Microsoft.Maui.Essentials": {
+              "target": "Package",
+              "version": "[9.0.21, )"
+            },
+            "Microsoft.Maui.Graphics": {
+              "target": "Package",
+              "version": "[9.0.21, )"
+            },
+            "Microsoft.Toolkit.Mvvm": {
+              "target": "Package",
+              "version": "[7.1.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.Android": {
+              "privateAssets": "all"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/mahadeva/code/NetworkMonitorProcessor/NetworkMonitorProcessor-Maui.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/mahadeva/code/NetworkMonitorProcessor/NetworkMonitorProcessor-Maui.csproj",
+        "projectName": "NetworkMonitorProcessor-Maui",
+        "projectPath": "/home/mahadeva/code/NetworkMonitorProcessor/NetworkMonitorProcessor-Maui.csproj",
+        "packagesPath": "/home/mahadeva/.nuget/packages/",
+        "outputPath": "/home/mahadeva/code/NetworkMonitorProcessor/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/mahadeva/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "/usr/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "/home/mahadeva/code/NetworkMonitor/NetworkMonitor-Maui.csproj": {
+                "projectPath": "/home/mahadeva/code/NetworkMonitor/NetworkMonitor-Maui.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "all"
+        },
+        "SdkAnalysisLevel": "9.0.100"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.Extensions.Configuration.CommandLine": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.EnvironmentVariables": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.Json": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Logging.Console": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.100/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

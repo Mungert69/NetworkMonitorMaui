@@ -1,0 +1,31 @@
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NetworkMonitor.Maui.Views.CustomPopupView"
+             xmlns:vm="clr-namespace:NetworkMonitor.Maui.ViewModels"
+             IsVisible="{Binding IsPopupVisible}"
+             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
+
+    <Frame Padding="10"
+           CornerRadius="10">
+        <Grid>
+            <!-- Define rows -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Row for the Label -->
+                <RowDefinition Height="Auto"/> <!-- Row for the Button -->
+            </Grid.RowDefinitions>
+
+            <!-- Place Label in the first row -->
+            <Label Text="{Binding PopupMessage}" 
+                   LineBreakMode="WordWrap"
+                   Grid.Row="0"/>
+
+            <!-- Place Button in the second row, centered -->
+            <Button Text="Ok" 
+                    Command="{Binding ClosePopupCommand}" 
+                    HorizontalOptions="Center"
+                    Grid.Row="1"
+                      BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                    TextColor="{DynamicResource PrimaryButtonTextColor}"/>
+        </Grid>
+    </Frame>
+</ContentView>

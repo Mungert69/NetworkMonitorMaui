@@ -1,0 +1,5 @@
+/home/mahadeva/code/NetworkMonitorMaui/obj/Debug/net9.0/NetworkMonitorMaui.csproj.AssemblyReference.cache
+/home/mahadeva/code/NetworkMonitorMaui/obj/Debug/net9.0/NetworkMonitorMaui.GeneratedMSBuildEditorConfig.editorconfig
+/home/mahadeva/code/NetworkMonitorMaui/obj/Debug/net9.0/NetworkMonitorMaui.AssemblyInfoInputs.cache
+/home/mahadeva/code/NetworkMonitorMaui/obj/Debug/net9.0/NetworkMonitorMaui.AssemblyInfo.cs
+/home/mahadeva/code/NetworkMonitorMaui/obj/Debug/net9.0/NetworkMonitorMaui.csproj.CoreCompileInputs.cache
