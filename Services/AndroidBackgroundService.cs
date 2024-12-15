@@ -51,7 +51,8 @@ public const string ServiceMessageExtra = "ServiceMessage";
         public override void OnCreate()
         {
             base.OnCreate();
-             _cts = new CancellationTokenSource();
+            try {
+                _cts = new CancellationTokenSource();
 
             _logger = RootNamespaceService.ServiceProvider.GetRequiredService<ILogger<AndroidBackgroundService>>();
             _netConfig = RootNamespaceService.ServiceProvider.GetRequiredService<NetConnectConfig>();
@@ -63,22 +64,31 @@ public const string ServiceMessageExtra = "ServiceMessage";
             _cmdProcessorProvider=RootNamespaceService.ServiceProvider.GetRequiredService<ICmdProcessorProvider>();
             _platformService= RootNamespaceService.ServiceProvider.GetRequiredService<IPlatformService>();
             _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo,_processorStates, _monitorPingInfoView, _cmdProcessorProvider );
-
+            _logger.LogInformation($" Success : got DI objects and injected into BackgroudService");
+            }
+            catch (Exception e){
+                _logger.LogError($" Error : in OnCreate : {e.Message}");
+                
+            }
+             
         }
         private async Task<ResultObj> StartAsync()
         {
             var result=new ResultObj();
             try
             {
+                 _logger.LogInformation($" SERVICE : Starting AndroidBackgroundService");
+           
                 result = await _backgroundService.Start();
                 _platformService.OnUpdateServiceState(result, _backgroundService.IsRunning);
-               
+               _logger.LogInformation($" SERVICE : Success : Started AndroidBackgroundService");
+           
 
             }
             catch (Exception ex)
             {   
                result.Success=false;
-               result.Message=$"Error initializing background service: {ex.Message}";
+               result.Message=$" Error starting  AndroidBackgroundService: {ex.Message}";
                  _logger.LogError(result.Message);
                   _platformService.OnUpdateServiceState(result, _backgroundService.IsRunning);
                
@@ -91,14 +101,16 @@ public const string ServiceMessageExtra = "ServiceMessage";
               var result=new ResultObj();
             try
             {
+                  _logger.LogInformation($" SERVICE : Stopping AndroidBackgroundService");
             result = await _backgroundService.Stop();
                _platformService.OnUpdateServiceState(result, _backgroundService.IsRunning);
-               
+                _logger.LogInformation($" SERVICE : Success : Stopped AndroidBackgroundService");
+           
             }
             catch (Exception ex)
             {
             result.Success=false;
-               result.Message=$"Error stopping background service: {ex.Message}";
+               result.Message=$"Error : stopping background service: {ex.Message}";
                  _logger.LogError(result.Message);
                   _platformService.OnUpdateServiceState(result, _backgroundService.IsRunning);
                
@@ -151,7 +163,8 @@ public const string ServiceMessageExtra = "ServiceMessage";
             {
                  Task.Run(async () =>
                 {
-                
+                 _logger.LogInformation($" SERVICE : Getting Image Resources for AndroidBackgroundService");
+           
                 var logoResourceId = RootNamespaceService.GetDrawableResourceId("logo", Android.Resource.Drawable.IcDialogAlert); 
         var viewActionResourceId = RootNamespaceService.GetDrawableResourceId("view", Android.Resource.Drawable.IcMenuView); 
  var stopActionResourceId = RootNamespaceService.GetDrawableResourceId("stop", Android.Resource.Drawable.IcDelete); // Default stop icon
@@ -176,7 +189,8 @@ public const string ServiceMessageExtra = "ServiceMessage";
                          GetViewAppPendingIntent())
                         .Build();
                         */
-
+ _logger.LogInformation($" SERVICE : creating notification channel for AndroidBackgroundService");
+           
                      notification = new Notification.Builder(this, "channel_id")
                         .SetAutoCancel(false)
                         .SetOngoing(true)
@@ -184,6 +198,9 @@ public const string ServiceMessageExtra = "ServiceMessage";
                         .SetContentText("Monitoring network...")
                         .SetSmallIcon(logoResourceId)
                         .Build();
+
+                         _logger.LogInformation($" SERVICE : starting in foreground service AndroidBackgroundService");
+           
                     if (Build.VERSION.SdkInt < BuildVersionCodes.Tiramisu)
                     {
                         StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification);
@@ -200,6 +217,9 @@ public const string ServiceMessageExtra = "ServiceMessage";
                 {
 #pragma warning disable CS0618
                     // For API below 26
+                    _logger.LogInformation($" SERVICE : creating notification channel for AndroidBackgroundService");
+           
+      
                     Notification notification = new NotificationCompat.Builder(this)
                                    .SetContentTitle("Free Network Monitor Agent Agent")
                                    .SetContentText("Monitoring network...")
@@ -208,9 +228,13 @@ public const string ServiceMessageExtra = "ServiceMessage";
                                    //.AddAction(NetworkMonitorAgent.Resource.Drawable.stop, "Stop", GetStopServicePendingIntent())
                                    .AddAction(viewActionResourceId, "Open", GetViewAppPendingIntent()) // Ensure you have an icon for 'View App'
                                    .Build();
+                     _logger.LogInformation($" SERVICE : starting in foreground service AndroidBackgroundService");
+           
                     StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification);
 #pragma warning restore CS0618
                 }
+                                         _logger.LogInformation($" SERVICE : starting background service for AndroidBackgroundService");
+           
                var result=await StartAsync();
                if (!result.Success) ;//TODO close the notification
                 
@@ -218,6 +242,8 @@ public const string ServiceMessageExtra = "ServiceMessage";
             }
            catch (Exception e){
              var result=new ResultObj(){Message=$" Error : Failed to Start service . Error was : {e.Message}",Success=false};
+            _logger.LogError($" Error : failed to start AndroidBackgroundService. Error was : {e.Message}");
+           
              _platformService.OnUpdateServiceState(result, _backgroundService.IsRunning);
             }
             return StartCommandResult.Sticky;
@@ -234,7 +260,7 @@ public const string ServiceMessageExtra = "ServiceMessage";
     }
     catch (Exception e)
     {
-        _logger.LogError($" Error stopping service in OnDestroy: {e.Message}");
+        _logger.LogError($" Error : stopping service in OnDestroy. Error was : {e.Message}");
     }
     finally
     {
