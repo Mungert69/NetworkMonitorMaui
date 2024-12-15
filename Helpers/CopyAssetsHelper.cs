@@ -67,7 +67,7 @@ public class CopyAssetsHelper
             }
             return outputStr.ToString();
         }
-        public static async Task<string> CopyAssetsToLocalStorage(string assetDirectoryName, string csAssetDirectoryName)
+        public static async Task<string> CopyAssetsToLocalStorage(string assetDirectoryName, string csAssetDirectoryName, string dllAssetDirectoryName)
         {
             var outputStr = new StringBuilder();
 
@@ -100,6 +100,17 @@ public class CopyAssetsHelper
                 outputStr.Append(await CopyAssetType("cs-asset", false, csAssetDirectoryName, csAssetFiles, csLocalPath));
                 outputStr.AppendLine($"Directory copied to: {csLocalPath}");
                 outputStr.Append(ListCopiedFiles(csAssetDir));
+
+                  outputStr.AppendLine($"Starting dll copy from : {dllAssetDirectoryName}");
+
+                string dllAssetDir = Path.Combine("openssl", "bin", "dlls");
+                var (dllAssetFiles, dllListOutput) = await ListAssetFiles(dllAssetDirectoryName);
+                outputStr.Append(dllListOutput);
+                string dllLocalPath = Path.Combine(FileSystem.AppDataDirectory, dllAssetDir);
+                Directory.CreateDirectory(dllLocalPath);
+                outputStr.Append(await CopyAssetType("dll", false, dllAssetDirectoryName, dllAssetFiles, dllLocalPath));
+                outputStr.AppendLine($"Directory copied to: {dllLocalPath}");
+                outputStr.Append(ListCopiedFiles(dllAssetDir));
 
                 outputStr.Append(SetLDLibraryPath(Path.Combine(localPath, "lib64")));
             }
