@@ -11,21 +11,8 @@ using NetworkMonitor.Service.Services.OpenAI;
 
 namespace NetworkMonitor.Maui.Services
 {
-    public interface IPlatformService
-    {
-        bool RequestPermissionsAsync();
-        Task StartBackgroundService();
-        Task StopBackgroundService();
-        bool IsServiceStarted { get; set; }
-        string ServiceMessage { get; set; }
-        Task ChangeServiceState(bool state);
-        //void OnServiceStateChanged();
-        event EventHandler ServiceStateChanged;
-        bool DisableAgentOnServiceShutdown { get; set; }
-        void OnUpdateServiceState(ResultObj result, bool state);
-    }
-
-    public class PlatformService
+  
+    public class PlatformService : IPlatformService
     {
         protected ILogger _logger;
         //protected IDialogService _dialogService;
@@ -99,11 +86,17 @@ namespace NetworkMonitor.Maui.Services
         {
             return Task.CompletedTask;
         }
+          public virtual bool RequestPermissionsAsync()
+        {
+            return true;
+        }
+
+       public virtual void OnUpdateServiceState(ResultObj result, bool state){}
         public string ServiceMessage { get => _serviceMessage; set => _serviceMessage = value; }
         public bool DisableAgentOnServiceShutdown { get => _disableAgentOnServiceShutdown; set => _disableAgentOnServiceShutdown = value; }
     }
 #if ANDROID
-    public class AndroidPlatformService : PlatformService, IPlatformService
+    public class AndroidPlatformService : PlatformService
     {
         private BroadcastReceiver _serviceStatusReceiver;
         private TaskCompletionSource<bool> _serviceOperationCompletionSource;
@@ -319,7 +312,7 @@ var powerService=Context.PowerService;
 
     }
 #endif
-    public class WindowsPlatformService : PlatformService, IPlatformService
+    public class WindowsPlatformService : PlatformService
     {
         private IBackgroundService _backgroundService;
 

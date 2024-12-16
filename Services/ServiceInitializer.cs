@@ -1,6 +1,6 @@
 using NetworkMonitor.Objects;
 
-namespace NetworkMonitor.Maui
+namespace NetworkMonitor.Maui.Services
 {
     public static class ServiceInitializer
     {

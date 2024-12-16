@@ -15,14 +15,11 @@ namespace NetworkMonitor.Maui.ViewModels
     public class MainPageViewModel : INotifyPropertyChanged
     {
         private NetConnectConfig _netConfig;
-        private IPlatformService _platformService;
+        private NetworkMonitor.Maui.Services.IPlatformService _platformService;
         private ILogger _logger;
         private IAuthService _authService;  // Added
         private CancellationTokenSource? _pollingCts;
 
-        public Action? AuthorizeAction;
-        public Action? LoginAction;
-        public Action? AddHostsAction;
         public ICommand ToggleServiceCommand { get; }
         public event EventHandler<(bool show ,bool showCancel)> ShowLoadingMessage;
         public event EventHandler<(string Title, string Message)> ShowAlertRequested;
@@ -31,6 +28,41 @@ namespace NetworkMonitor.Maui.ViewModels
 
 
         public ObservableCollection<TaskItem> Tasks { get; set; } = new ObservableCollection<TaskItem>();
+
+ public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger logger, IAuthService authService)
+        {
+            _netConfig = netConfig;
+            _platformService = platformService;
+            _logger = logger;
+            _authService = authService;
+
+            if (_platformService != null)
+            {
+               // _platformService.ServiceStateChanged += PlatformServiceStateChanged;
+                // Initialize local fields based on current platform state
+                _isServiceStarted = _platformService.IsServiceStarted;
+                _disableAgentOnServiceShutdown = _platformService.DisableAgentOnServiceShutdown;
+                _serviceMessage = _platformService.ServiceMessage ?? "No Service Message";
+            }
+            else
+            {
+                _logger.LogError("_platformService is null in MainPageViewModel constructor.");
+            }
+
+            if (_netConfig?.AgentUserFlow != null)
+            {
+                _netConfig.AgentUserFlow.PropertyChanged += OnAgentUserFlowPropertyChanged;
+                _agentUserFlow = _netConfig.AgentUserFlow;
+            }
+            else
+            {
+                _logger.LogError("_netConfig.AgentUserFlow is null in MainPageViewModel constructor.");
+            }
+            SetupTasks();
+            ToggleServiceCommand = new Command<bool>(async (value) => await SetServiceStartedAsync(value));
+        }
+
+       
 
         // Property to hold the authorization URL previously handled in MainPage
         private string _authUrl;
@@ -81,39 +113,6 @@ namespace NetworkMonitor.Maui.ViewModels
         private bool _disableAgentOnServiceShutdown;
         private string _serviceMessage = "No Service Message";
         private AgentUserFlow _agentUserFlow;
-
-        public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger logger, IAuthService authService)
-        {
-            _netConfig = netConfig;
-            _platformService = platformService;
-            _logger = logger;
-            _authService = authService;
-
-            if (_platformService != null)
-            {
-               // _platformService.ServiceStateChanged += PlatformServiceStateChanged;
-                // Initialize local fields based on current platform state
-                _isServiceStarted = _platformService.IsServiceStarted;
-                _disableAgentOnServiceShutdown = _platformService.DisableAgentOnServiceShutdown;
-                _serviceMessage = _platformService.ServiceMessage ?? "No Service Message";
-            }
-            else
-            {
-                _logger.LogError("_platformService is null in MainPageViewModel constructor.");
-            }
-
-            if (_netConfig?.AgentUserFlow != null)
-            {
-                _netConfig.AgentUserFlow.PropertyChanged += OnAgentUserFlowPropertyChanged;
-                _agentUserFlow = _netConfig.AgentUserFlow;
-            }
-            else
-            {
-                _logger.LogError("_netConfig.AgentUserFlow is null in MainPageViewModel constructor.");
-            }
-            SetupTasks();
-            ToggleServiceCommand = new Command<bool>(async (value) => await SetServiceStartedAsync(value));
-        }
 
        
 
