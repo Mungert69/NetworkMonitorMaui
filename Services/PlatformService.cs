@@ -124,7 +124,7 @@ namespace NetworkMonitor.Maui.Services
             Android.App.Application.Context.RegisterReceiver(_serviceStatusReceiver, filter);
         }
 
-        public bool RequestPermissionsAsync()
+        public override bool RequestPermissionsAsync()
         {
             try
             {         
@@ -213,7 +213,7 @@ var powerService=Context.PowerService;
             }
         }
 
-        public  void OnUpdateServiceState(ResultObj result, bool state)
+        public  override void OnUpdateServiceState(ResultObj result, bool state)
         {
                  try
             {
@@ -321,7 +321,7 @@ var powerService=Context.PowerService;
             _backgroundService = backgroundService;
         }
 
-        public bool RequestPermissionsAsync()
+        public override bool RequestPermissionsAsync()
         {
             try
             {
@@ -335,7 +335,7 @@ var powerService=Context.PowerService;
             }
         }
 
-        public void OnUpdateServiceState(ResultObj result, bool state)
+        public override void OnUpdateServiceState(ResultObj result, bool state)
         {
             try
             {
