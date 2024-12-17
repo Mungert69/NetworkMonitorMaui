@@ -1,12 +1,13 @@
 using CommunityToolkit.Maui.Views;
 
-namespace NetworkMonitorAgent
+namespace NetworkMonitor.Maui.Views
 {
     public partial class StatusDetailsPopup : Popup
     {
         public StatusDetailsPopup()
         {
-            InitializeComponent(); var rootWrapper = new Grid
+            InitializeComponent();
+             var rootWrapper = new Grid
             {
                 BackgroundColor = Application.Current.RequestedTheme == AppTheme.Dark
             ? Color.FromArgb("#1E1E1E") // Dark theme
