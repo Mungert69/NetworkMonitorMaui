@@ -21,7 +21,59 @@ namespace NetworkMonitor.Maui;
 public class CopyAssetsHelper
 {
 
-       private static async Task<string> CopyAssetType(string assetType, bool setPerms, string directoryName, string[] assetFiles, string localPath)
+
+private static async Task<string> CopyAssetType(string assetType, bool setPerms, string directoryName, string[] assetFiles, string localPath)
+{
+    var outputStr = new StringBuilder();
+    var copyTasks = assetFiles.Select(async assetFile =>
+    {
+        string assetFilePath = Path.Combine(directoryName, assetFile);
+        string localFilePath = Path.Combine(localPath, assetFile);
+
+        try
+        {
+            if (File.Exists(localFilePath))
+            {
+                // Compare file size before copying
+                using var stream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
+                if (new FileInfo(localFilePath).Length == stream.Length)
+                {
+                    return $"Skipped {assetType} file: {assetFile} (Already up-to-date)";
+                }
+            }
+
+            // Ensure the directory exists
+            Directory.CreateDirectory(Path.GetDirectoryName(localFilePath)!);
+
+            // Copy file
+            using var sourceStream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
+            using var targetStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true);
+            await sourceStream.CopyToAsync(targetStream);
+
+            if (setPerms && IsBinary(assetFile, out string binaryType))
+            {
+                SetExecutablePermission(localFilePath);
+                return $"Permission set for {binaryType}: {localFilePath}";
+            }
+
+            return $"Copied {assetType} file: {assetFile}";
+        }
+        catch (Exception e)
+        {
+            return $"Error copying {assetType} file {assetFile}: {e.Message}";
+        }
+    });
+
+    var results = await Task.WhenAll(copyTasks);
+    foreach (var result in results.Where(r => r != null))
+    {
+        outputStr.AppendLine(result);
+    }
+
+    return outputStr.ToString();
+}
+
+       private static async Task<string> CopyAssetType(string assetType, bool setPerms, string directoryName, string[] assetFiles, string localPath, string old)
         {
             var outputStr = new StringBuilder();
             foreach (var assetFile in assetFiles)
@@ -265,7 +317,7 @@ public class CopyAssetsHelper
             return outputStr.ToString();
         }
 
-        private static async Task<(string[], string)> ListAssetFiles(string directoryName)
+        private static async Task<(string[], string)> ListAssetFiles(string directoryName, string old)
         {
             var outputStr=new StringBuilder();
             try
@@ -297,6 +349,36 @@ public class CopyAssetsHelper
                 return (Array.Empty<string>(),outputStr.ToString());
             }
         }
+        private static async Task<(string[], string)> ListAssetFiles(string directoryName)
+{
+    var outputStr = new StringBuilder();
+    try
+    {
+        string manifestFileName = Path.Combine(directoryName, "assets_manifest.txt");
+        using var stream = await FileSystem.OpenAppPackageFileAsync(manifestFileName);
+        using var reader = new StreamReader(stream);
+        
+        // Read all lines in one go
+        var lines = (await reader.ReadToEndAsync())
+                    .Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(line => line.TrimStart('.', '/'))
+                    .ToArray();
+
+        outputStr.AppendLine($"Success: assets from {directoryName} read successfully");
+        foreach (var line in lines)
+        {
+            outputStr.AppendLine($"Preparing file: {line}");
+        }
+
+        return (lines, outputStr.ToString());
+    }
+    catch (Exception ex)
+    {
+        outputStr.AppendLine($"Error: reading asset manifest. Error was: {ex.Message}");
+        return (Array.Empty<string>(), outputStr.ToString());
+    }
+}
+
 
         private static string ListCopiedFiles(string assetDir)
         {
