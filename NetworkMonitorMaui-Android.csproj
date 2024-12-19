@@ -1,3 +1,4 @@
+
 <Project Sdk="Microsoft.NET.Sdk">
         <PropertyGroup>
                 <TargetFrameworks>net9.0-android</TargetFrameworks>
@@ -9,6 +10,7 @@
                 <!-- Display name -->
                 <ApplicationDisplayVersion>0.0.1</ApplicationDisplayVersion>
                 <ApplicationVersion>1</ApplicationVersion>
+                 <DefineConstants>ANDROID</DefineConstants>
         </PropertyGroup>
 
      

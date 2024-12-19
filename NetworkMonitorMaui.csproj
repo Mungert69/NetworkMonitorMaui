@@ -9,6 +9,7 @@
                 <!-- Display name -->
                 <ApplicationDisplayVersion>0.0.1</ApplicationDisplayVersion>
                 <ApplicationVersion>1</ApplicationVersion>
+                 <DefineConstants>WINDOWS</DefineConstants>
         </PropertyGroup>
 
      

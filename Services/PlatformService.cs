@@ -11,7 +11,6 @@ using NetworkMonitor.Service.Services.OpenAI;
 
 namespace NetworkMonitor.Maui.Services
 {
-  
     public class PlatformService : IPlatformService
     {
         protected ILogger _logger;
@@ -100,7 +99,6 @@ namespace NetworkMonitor.Maui.Services
     {
         private BroadcastReceiver _serviceStatusReceiver;
         private TaskCompletionSource<bool> _serviceOperationCompletionSource;
-
 
         public AndroidPlatformService( ILogger<AndroidPlatformService> logger) : base( logger)
         {
