@@ -1,7 +1,9 @@
 // Platforms/Android/PermissionsHelper.cs
+#if ANDROID
 using Android.Util;
 using Java.IO;
 using System;
+
 
 namespace NetworkMonitor.Maui
 {
@@ -36,3 +38,4 @@ namespace NetworkMonitor.Maui
         }
     }
 }
+#endif

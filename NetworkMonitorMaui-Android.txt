@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
         <PropertyGroup>
-                <TargetFrameworks>net9.0</TargetFrameworks>
+                <TargetFrameworks>net9.0-android</TargetFrameworks>
                 <UseMaui>true</UseMaui>
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
@@ -28,6 +28,7 @@
         </ItemGroup>
         <ItemGroup>
                 <ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui.csproj" />
+                <ProjectReference Include="..\NetworkMonitor\NetworkMonitor-Maui.csproj" />
         </ItemGroup>
 	
 </Project>
