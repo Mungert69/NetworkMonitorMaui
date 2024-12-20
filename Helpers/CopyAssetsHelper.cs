@@ -221,7 +221,7 @@ private static async Task<string> CopyAssetType(string assetType, bool setPerms,
         PermissionsHelper.MakeFileExecutable(filePath);
 #elif WINDOWS
 
-                outout.Append(ProcessFileForSymbolicLink(filePath));
+                outputStr.Append(ProcessFileForSymbolicLink(filePath));
 #else
                 // Existing implementation for other platforms
                 var process = new Process
