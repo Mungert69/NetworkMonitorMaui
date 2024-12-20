@@ -105,11 +105,7 @@ namespace NetworkMonitor.Maui.ViewModels
 
         // Fields that mirror platform service properties
         private bool _isServiceStarted;
-        public bool IsServiceStarted
-        {
-            get => _isServiceStarted;
-            set => SetProperty(ref _isServiceStarted, value);
-        }
+
         private bool _disableAgentOnServiceShutdown;
         private string _serviceMessage = "No Service Message";
         private AgentUserFlow _agentUserFlow;
@@ -119,26 +115,32 @@ namespace NetworkMonitor.Maui.ViewModels
         public string ServiceMessage
         {
             get => _serviceMessage;
-            private set => SetProperty(ref _serviceMessage, value);
+            set => SetProperty(ref _serviceMessage, value);
         }
         public CancellationTokenSource? PollingCts { get => _pollingCts; set => _pollingCts = value; }
 
-        public async Task SetServiceStartedAsync(bool value)
-        {
-            try
-            {
-                await ChangeServiceAsync(value);
+     
+public async Task<bool> SetServiceStartedAsync(bool value)
+{
+    try
+    {
+        // Trigger service state change
+        await ChangeServiceAsync(value);
 
-                if (_isServiceStarted && !value && _disableAgentOnServiceShutdown)
-                {
-                    ShowToggle = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error changing service state: {ex.Message}");
-            }
+        // Update the toggle visibility and return the final state
+        if (_isServiceStarted && !value && _disableAgentOnServiceShutdown)
+        {
+            ShowToggle = false;
         }
+
+        return _isServiceStarted; // Return actual service state
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError($"Error changing service state: {ex.Message}");
+        return false; // Indicate failure
+    }
+}
 
         private async Task ChangeServiceAsync(bool state)
         {
@@ -157,7 +159,7 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 try
                 {
-                    IsServiceStarted = _platformService?.IsServiceStarted ?? false;
+                    _isServiceStarted = _platformService?.IsServiceStarted ?? false;
                     _disableAgentOnServiceShutdown = _platformService?.DisableAgentOnServiceShutdown ?? false;
                     ServiceMessage = _platformService?.ServiceMessage ?? "No Service Message";
 
@@ -172,28 +174,6 @@ namespace NetworkMonitor.Maui.ViewModels
                 }
             }
         }
-
-     /*   private void PlatformServiceStateChanged(object? sender, EventArgs e)
-        {
-            try
-            {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    _isServiceStarted = _platformService?.IsServiceStarted ?? false;
-                    _disableAgentOnServiceShutdown = _platformService?.DisableAgentOnServiceShutdown ?? false;
-                    _serviceMessage = _platformService?.ServiceMessage ?? "No Service Message";
-
-                    OnPropertyChanged(nameof(ServiceMessage));
-                    OnPropertyChanged(nameof(ShowTasks));
-                    OnPropertyChanged(nameof(ShowToggle));
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($" Error : handling service state change: {ex.Message}");
-            }
-        }*/
-
         private void OnAgentUserFlowPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             try
