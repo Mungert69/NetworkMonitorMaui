@@ -72,54 +72,7 @@ private static async Task<string> CopyAssetType(string assetType, bool setPerms,
 
     return outputStr.ToString();
 }
-
-       private static async Task<string> CopyAssetType(string assetType, bool setPerms, string directoryName, string[] assetFiles, string localPath, string old)
-        {
-            var outputStr = new StringBuilder();
-            foreach (var assetFile in assetFiles)
-            {
-                string localFilePath = "";
-                string assetFilePath = Path.Combine(directoryName, assetFile);
-                try
-                {
-                    using (var stream = await FileSystem.OpenAppPackageFileAsync(assetFilePath))
-                    {
-                        if (stream == null)
-                        {
-                            outputStr.AppendLine($"Failed to open {assetType} file: {assetFilePath}");
-                            continue;
-                        }
-
-                        localFilePath = Path.Combine(localPath, assetFile);
-                        string? localFileDirectory = Path.GetDirectoryName(localFilePath);
-
-                        if (localFileDirectory != null && !Directory.Exists(localFileDirectory))
-                            Directory.CreateDirectory(localFileDirectory);
-
-                        using (var fileStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write))
-                        {
-                            await stream.CopyToAsync(fileStream);
-                        }
-                    }
-                    if (setPerms)
-                    {
-                        if (IsBinary(assetFile, out string binaryType))
-                        {
-                            outputStr.Append(SetExecutablePermission(localFilePath));
-                            outputStr.AppendLine($"Permission set for {binaryType}: {localFilePath}");
-                        }
-                    }
-
-                }
-                catch (Exception e)
-                {
-                    outputStr.AppendLine($"Error copying {assetType} file {assetFile} . Error was : {e.Message}");
-                }
-
-            }
-            return outputStr.ToString();
-        }
-        public static async Task<string> CopyAssetsToLocalStorage(string assetDirectoryName, string csAssetDirectoryName, string dllAssetDirectoryName)
+    public static async Task<string> CopyAssetsToLocalStorage(string assetDirectoryName, string csAssetDirectoryName, string dllAssetDirectoryName)
         {
             var outputStr = new StringBuilder();
 
@@ -317,38 +270,7 @@ private static async Task<string> CopyAssetType(string assetType, bool setPerms,
             return outputStr.ToString();
         }
 
-        private static async Task<(string[], string)> ListAssetFiles(string directoryName, string old)
-        {
-            var outputStr=new StringBuilder();
-            try
-            {
-                string manifestFileName = Path.Combine(directoryName, "assets_manifest.txt");
-                using (var stream = await FileSystem.OpenAppPackageFileAsync(manifestFileName))
-                using (var reader = new StreamReader(stream))
-                {
-                    var fileList = new List<string>();
-
-                    while (!reader.EndOfStream)
-                    {
-                        var line = await reader.ReadLineAsync();
-                        if (!string.IsNullOrWhiteSpace(line))
-                        {
-                            // Trim any leading ./ from the assetFilePath
-                            line = line.TrimStart('.', '/');
-                            outputStr.AppendLine($"Preparing file: {line}");
-                            fileList.Add(line);
-                        }
-                    }
-                    outputStr.AppendLine($" Success : assets from {directoryName} read successully");
-                    return (fileList.ToArray(),outputStr.ToString());
-                }
-            }
-            catch (Exception ex)
-            {
-                   outputStr.AppendLine($" Error : reading asset manifest. Error was : {ex.Message}");
-                return (Array.Empty<string>(),outputStr.ToString());
-            }
-        }
+       
         private static async Task<(string[], string)> ListAssetFiles(string directoryName)
 {
     var outputStr = new StringBuilder();
