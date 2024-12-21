@@ -20,8 +20,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private IAuthService _authService;  // Added
         private CancellationTokenSource? _pollingCts;
 
-        public ICommand ToggleServiceCommand { get; }
-        public event EventHandler<(bool show ,bool showCancel)> ShowLoadingMessage;
+        public event EventHandler<(bool show, bool showCancel)> ShowLoadingMessage;
         public event EventHandler<(string Title, string Message)> ShowAlertRequested;
         public event EventHandler<string> OpenBrowserRequested;
         public event EventHandler<string> NavigateRequested;
@@ -29,7 +28,7 @@ namespace NetworkMonitor.Maui.ViewModels
 
         public ObservableCollection<TaskItem> Tasks { get; set; } = new ObservableCollection<TaskItem>();
 
- public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger logger, IAuthService authService)
+        public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger logger, IAuthService authService)
         {
             _netConfig = netConfig;
             _platformService = platformService;
@@ -38,7 +37,7 @@ namespace NetworkMonitor.Maui.ViewModels
 
             if (_platformService != null)
             {
-               // _platformService.ServiceStateChanged += PlatformServiceStateChanged;
+                // _platformService.ServiceStateChanged += PlatformServiceStateChanged;
                 // Initialize local fields based on current platform state
                 _isServiceStarted = _platformService.IsServiceStarted;
                 _disableAgentOnServiceShutdown = _platformService.DisableAgentOnServiceShutdown;
@@ -59,40 +58,20 @@ namespace NetworkMonitor.Maui.ViewModels
                 _logger.LogError("_netConfig.AgentUserFlow is null in MainPageViewModel constructor.");
             }
             SetupTasks();
-            ToggleServiceCommand = new Command<bool>(async (value) => await SetServiceStartedAsync(value));
         }
 
-       
+
 
         // Property to hold the authorization URL previously handled in MainPage
         private string _authUrl;
-        public string AuthUrl
-        {
-            get => _authUrl;
-            private set => SetProperty(ref _authUrl, value);
-        }
+
 
         // Expose the MonitorLocation so MainPage can display it if needed
         public string MonitorLocation => _netConfig?.MonitorLocation ?? "Unknown";
 
         private bool _isPolling;
-        public bool IsPolling
-        {
-            get => _isPolling;
-            set => SetProperty(ref _isPolling, value);
-        }
 
-        private bool _showToggle = true;
-        public bool ShowToggle
-        {
-            get => _showToggle;
-            set
-            {
-                SetProperty(ref _showToggle, value);
-            }
-        }
-
-          private bool _showTasks = false;
+        private bool _showTasks = false;
         public bool ShowTasks
         {
             get => _showTasks;
@@ -110,7 +89,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private string _serviceMessage = "No Service Message";
         private AgentUserFlow _agentUserFlow;
 
-       
+
 
         public string ServiceMessage
         {
@@ -119,35 +98,28 @@ namespace NetworkMonitor.Maui.ViewModels
         }
         public CancellationTokenSource? PollingCts { get => _pollingCts; set => _pollingCts = value; }
 
-     
-public async Task<bool> SetServiceStartedAsync(bool value)
-{
-    try
-    {
-        // Trigger service state change
-        await ChangeServiceAsync(value);
 
-        // Update the toggle visibility and return the final state
-        if (_isServiceStarted && !value && _disableAgentOnServiceShutdown)
+        public async Task<bool> SetServiceStartedAsync(bool value)
         {
-            ShowToggle = false;
-        }
+            try
+            {
+                // Trigger service state change
+                await ChangeServiceAsync(value);
 
-        return _isServiceStarted; // Return actual service state
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError($"Error changing service state: {ex.Message}");
-        return false; // Indicate failure
-    }
-}
+                return _isServiceStarted; // Return actual service state
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error changing service state: {ex.Message}");
+                return false; // Indicate failure
+            }
+        }
 
         private async Task ChangeServiceAsync(bool state)
         {
             try
             {
-                ShowToggle = false;
-                ShowLoadingMessage?.Invoke(this, (true,false));
+                ShowLoadingMessage?.Invoke(this, (true, false));
                 await Task.Delay(200);
                 await _platformService.ChangeServiceState(state);
             }
@@ -161,11 +133,13 @@ public async Task<bool> SetServiceStartedAsync(bool value)
                 {
                     _isServiceStarted = _platformService?.IsServiceStarted ?? false;
                     _disableAgentOnServiceShutdown = _platformService?.DisableAgentOnServiceShutdown ?? false;
-                    ServiceMessage = _platformService?.ServiceMessage ?? "No Service Message";
+                    ShowLoadingMessage?.Invoke(this, (false, false));
+                    MainThread.BeginInvokeOnMainThread(() =>
+              {
+                  ShowTasks = _isServiceStarted;
+                  ServiceMessage = _platformService?.ServiceMessage ?? "";
+              });
 
-                    ShowLoadingMessage?.Invoke(this, (false,false));
-                    ShowTasks=_platformService?.IsServiceStarted ?? false;
-                    ShowToggle = true;
 
                 }
                 catch (Exception ex)
@@ -235,17 +209,17 @@ public async Task<bool> SetServiceStartedAsync(bool value)
                 {
                     try
                     {
-                        if (!IsPolling)
+                        if (!_isPolling)
                         {
-                            IsPolling = true;
+                            _isPolling = true;
                             await ExecuteAuthorizeAsync();
-                            IsPolling = false;
+                            _isPolling = false;
                         }
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError($"Error executing authorize action: {ex}");
-                        IsPolling = false; // Ensure we reset the flag even if there's an error
+                        _isPolling = false; // Ensure we reset the flag even if there's an error
                     }
                 })
             },
@@ -276,14 +250,14 @@ public async Task<bool> SetServiceStartedAsync(bool value)
             {
                 // Raise an event to show an alert
                 ShowAlertRequested?.Invoke(this, ("Error", result.Message));
-                IsPolling = false;
+                _isPolling = false;
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(AuthUrl))
+            if (!string.IsNullOrWhiteSpace(_authUrl))
             {
                 // If we need to open a browser, raise an event.
-                OpenBrowserRequested?.Invoke(this, AuthUrl);
+                OpenBrowserRequested?.Invoke(this, _authUrl);
 
                 // Also, if you need to start polling in the background, do it here:
                 await PollForTokenInBackgroundAsync();
@@ -292,7 +266,7 @@ public async Task<bool> SetServiceStartedAsync(bool value)
             {
                 ShowAlertRequested?.Invoke(this, ("Error", "Authorization URL is not available."));
                 _logger.LogError("Authorization URL is not available");
-                IsPolling = false;
+                _isPolling = false;
             }
         }
 
@@ -326,12 +300,12 @@ public async Task<bool> SetServiceStartedAsync(bool value)
 
         private async Task PollForTokenInBackgroundAsync()
         {
-            IsPolling = true;
-            
-            ShowLoadingMessage?.Invoke(this, (true,true));
+            _isPolling = true;
+
+            ShowLoadingMessage?.Invoke(this, (true, true));
             var result = await PollForTokenAsync(_pollingCts.Token);
-            ShowLoadingMessage?.Invoke(this, (false,false));
-            IsPolling = false;
+            ShowLoadingMessage?.Invoke(this, (false, false));
+            _isPolling = false;
 
             if (result.Success)
             {
@@ -358,13 +332,13 @@ public async Task<bool> SetServiceStartedAsync(bool value)
             if (!resultSend.Success)
                 return resultSend;
 
-            AuthUrl = _netConfig.ClientAuthUrl;
-            if (string.IsNullOrWhiteSpace(AuthUrl))
+            _authUrl = _netConfig.ClientAuthUrl;
+            if (string.IsNullOrWhiteSpace(_authUrl))
             {
                 return new ResultObj { Success = false, Message = "Authorization URL is not available." };
             }
 
-            // If AuthUrl is available, we can now poll for the token in background
+            // If _authUrl is available, we can now poll for the token in background
             return new ResultObj { Success = true, Message = "Authorized successfully." };
         }
 
