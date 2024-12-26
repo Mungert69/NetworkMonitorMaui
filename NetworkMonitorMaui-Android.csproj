@@ -12,8 +12,7 @@
                 <ApplicationVersion>1</ApplicationVersion>
                  <DefineConstants>ANDROID</DefineConstants>
                 <AndroidSdkDirectory>/usr/lib/android-sdk</AndroidSdkDirectory>
-                <RuntimeIdentifiers Condition="$(TargetFramework.Contains('-android'))">android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>
-
+              
         </PropertyGroup>
 
      
