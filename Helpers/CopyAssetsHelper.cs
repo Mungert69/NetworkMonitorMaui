@@ -106,12 +106,12 @@ private static async Task<string> CopyAssetType(string assetType, bool setPerms,
                 outputStr.AppendLine($"Directory copied to: {csLocalPath}");
                 outputStr.Append(ListCopiedFiles(csAssetDir));
 
-                  outputStr.AppendLine($"Starting dll copy from : {dllAssetDirectoryName}");
-            string dllPath = "dlls";
 #if WINDOWS
-            dllPath = "windowsdlls";
+            dllAssetDirectoryName = "windows" + dllAssetDirectoryName;
 #endif
-            string dllAssetDir = Path.Combine("openssl", "bin", dllPath);
+
+            outputStr.AppendLine($"Starting dll copy from : {dllAssetDirectoryName}");
+            string dllAssetDir = Path.Combine("openssl", "bin", "dlls");
                 var (dllAssetFiles, dllListOutput) = await ListAssetFiles(dllAssetDirectoryName);
                 outputStr.Append(dllListOutput);
                 string dllLocalPath = Path.Combine(FileSystem.AppDataDirectory, dllAssetDir);
