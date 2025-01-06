@@ -30,6 +30,8 @@ public static class ColorResource
 
     public static Color LightenColor(Color color, float factor)
     {
+        factor = Math.Max(0, factor); // Ensure factor is non-negative
+
         return new Color(
             Math.Min(color.Red + factor, 1.0f),
             Math.Min(color.Green + factor, 1.0f),
@@ -38,6 +40,10 @@ public static class ColorResource
 
     public static void AnimateColor(BoxView boxView, Color fromColor, Color toColor, uint length)
     {
+        if (boxView == null) throw new ArgumentNullException(nameof(boxView));
+        if (fromColor == null) throw new ArgumentNullException(nameof(fromColor));
+        if (toColor == null) throw new ArgumentNullException(nameof(toColor));
+
         var animation = new Animation(v =>
         {
             var color = Color.FromRgb(

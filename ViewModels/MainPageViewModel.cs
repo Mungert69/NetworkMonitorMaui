@@ -7,7 +7,6 @@ using System.Windows.Input;
 using NetworkMonitor.Maui.Services;
 using Microsoft.Extensions.Logging;
 using NetworkMonitor.Processor.Services;
-using System.Threading.Tasks;
 
 namespace NetworkMonitor.Maui.ViewModels
 {
@@ -25,6 +24,7 @@ namespace NetworkMonitor.Maui.ViewModels
         public string MonitorLocation => _netConfig?.MonitorLocation ?? "Unknown";
         private bool _isPolling;
         private bool _showTasks = false;
+        private ObservableCollection<TaskItem> _tasks;
 
 
         public bool ShowTasks
@@ -49,7 +49,7 @@ namespace NetworkMonitor.Maui.ViewModels
         public event EventHandler<string> NavigateRequested;
 
 
-        public ObservableCollection<TaskItem> Tasks { get; set; } = new ObservableCollection<TaskItem>();
+        public ObservableCollection<TaskItem> Tasks => _tasks;
 
         public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger logger, IAuthService authService)
         {
@@ -85,7 +85,7 @@ namespace NetworkMonitor.Maui.ViewModels
         {
             try
             {
-                Tasks = new ObservableCollection<TaskItem>
+                _tasks = new ObservableCollection<TaskItem>
         {
             new TaskItem
             {
@@ -219,11 +219,11 @@ namespace NetworkMonitor.Maui.ViewModels
 
         public void UpdateTaskCompletion(string taskDescription, bool isCompleted)
         {
-            if (Tasks == null) return;
+            if (_tasks == null) return;
 
             try
             {
-                var task = Tasks.FirstOrDefault(t => t.TaskDescription == taskDescription);
+                var task = _tasks.FirstOrDefault(t => t.TaskDescription == taskDescription);
                 if (task != null)
                 {
                     task.IsCompleted = isCompleted;
