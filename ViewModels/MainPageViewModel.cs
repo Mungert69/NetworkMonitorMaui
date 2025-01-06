@@ -7,16 +7,41 @@ using System.Windows.Input;
 using NetworkMonitor.Maui.Services;
 using Microsoft.Extensions.Logging;
 using NetworkMonitor.Processor.Services;
+using System.Threading.Tasks;
 
 namespace NetworkMonitor.Maui.ViewModels
 {
     public class MainPageViewModel : INotifyPropertyChanged
     {
         private NetConnectConfig _netConfig;
-        private NetworkMonitor.Maui.Services.IPlatformService _platformService;
+        private IPlatformService _platformService;
         private ILogger _logger;
-        private IAuthService _authService;  // Added
+        private IAuthService _authService;
         private CancellationTokenSource? _pollingCts;
+        private bool _isServiceStarted;
+        private bool _disableAgentOnServiceShutdown;
+        private string _serviceMessage = "No Service Message";
+        private string _authUrl;
+        public string MonitorLocation => _netConfig?.MonitorLocation ?? "Unknown";
+        private bool _isPolling;
+        private bool _showTasks = false;
+
+
+        public bool ShowTasks
+        {
+            get => _showTasks;
+            set
+            {
+                SetProperty(ref _showTasks, value);
+            }
+        }
+        public string ServiceMessage
+        {
+            get => _serviceMessage;
+            set => SetProperty(ref _serviceMessage, value);
+        }
+        public CancellationTokenSource? PollingCts { get => _pollingCts; set => _pollingCts = value; }
+
 
         public event EventHandler<(bool show, bool showCancel)> ShowLoadingMessage;
         public event EventHandler<(string Title, string Message)> ShowAlertRequested;
@@ -32,14 +57,13 @@ namespace NetworkMonitor.Maui.ViewModels
             _platformService = platformService;
             _logger = logger;
             _authService = authService;
+            SetupTasks();
 
             if (_platformService != null)
             {
-                // _platformService.ServiceStateChanged += PlatformServiceStateChanged;
-                // Initialize local fields based on current platform state
-                _isServiceStarted = _platformService.IsServiceStarted;
-                _disableAgentOnServiceShutdown = _platformService.DisableAgentOnServiceShutdown;
-                _serviceMessage = _platformService.ServiceMessage ?? "No Service Message";
+                _isServiceStarted = _platformService?.IsServiceStarted ?? false;
+                _disableAgentOnServiceShutdown = _platformService?.DisableAgentOnServiceShutdown ?? false;
+                _serviceMessage = _platformService?.ServiceMessage ?? "No Service Message";
             }
             else
             {
@@ -49,52 +73,62 @@ namespace NetworkMonitor.Maui.ViewModels
             if (_netConfig?.AgentUserFlow != null)
             {
                 _netConfig.AgentUserFlow.PropertyChanged += OnAgentUserFlowPropertyChanged;
-                _agentUserFlow = _netConfig.AgentUserFlow;
             }
             else
             {
                 _logger.LogError("_netConfig.AgentUserFlow is null in MainPageViewModel constructor.");
             }
-            SetupTasks();
+
         }
 
-
-
-        // Property to hold the authorization URL previously handled in MainPage
-        private string _authUrl;
-
-
-        // Expose the MonitorLocation so MainPage can display it if needed
-        public string MonitorLocation => _netConfig?.MonitorLocation ?? "Unknown";
-
-        private bool _isPolling;
-
-        private bool _showTasks = false;
-        public bool ShowTasks
+        public void SetupTasks()
         {
-            get => _showTasks;
-            set
+            try
             {
-                SetProperty(ref _showTasks, value);
+                Tasks = new ObservableCollection<TaskItem>
+        {
+            new TaskItem
+            {
+                TaskDescription = "Authorize Agent",
+                IsCompleted = _netConfig.AgentUserFlow.IsAuthorized,
+                TaskAction = new Command(async () =>
+                {
+                    try
+                    {
+                        if (!_isPolling)
+                        {
+                            _isPolling = true;
+                            await ExecuteAuthorizeAsync();
+                            _isPolling = false;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error executing authorize action: {ex}");
+                        _isPolling = false; // Ensure we reset the flag even if there's an error
+                    }
+                })
+            },
+            new TaskItem
+            {
+                TaskDescription = "Login Free Network Monitor",
+                IsCompleted = _netConfig.AgentUserFlow.IsLoggedInWebsite,
+                TaskAction = new Command(async () => await ExecuteLoginAsync())
+            },
+            new TaskItem
+            {
+                TaskDescription = "Scan for Hosts",
+                IsCompleted = _netConfig.AgentUserFlow.IsHostsAdded,
+                TaskAction = new Command(async () => await ExecuteScanHostsAsync())
+            }
+        };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error in SetupTasks : {e.Message}");
             }
         }
 
-
-        // Fields that mirror platform service properties
-        private bool _isServiceStarted;
-
-        private bool _disableAgentOnServiceShutdown;
-        private string _serviceMessage = "No Service Message";
-        private AgentUserFlow _agentUserFlow;
-
-
-
-        public string ServiceMessage
-        {
-            get => _serviceMessage;
-            set => SetProperty(ref _serviceMessage, value);
-        }
-        public CancellationTokenSource? PollingCts { get => _pollingCts; set => _pollingCts = value; }
 
 
         public async Task<bool> SetServiceStartedAsync(bool value)
@@ -148,6 +182,17 @@ namespace NetworkMonitor.Maui.ViewModels
         }
         private void OnAgentUserFlowPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
+            if (_netConfig == null)
+            {
+                _logger.LogWarning("NetConnectConfig is null. Exiting OnAgentUserFlowPropertyChanged.");
+                return;
+            }
+
+            if (_netConfig.AgentUserFlow == null)
+            {
+                _logger.LogWarning("AgentUserFlow is null in NetConnectConfig. Exiting OnAgentUserFlowPropertyChanged.");
+                return;
+            }
             try
             {
                 MainThread.BeginInvokeOnMainThread(() =>
@@ -155,16 +200,13 @@ namespace NetworkMonitor.Maui.ViewModels
                     switch (e.PropertyName)
                     {
                         case nameof(AgentUserFlow.IsAuthorized):
-                            _agentUserFlow.IsAuthorized = _netConfig.AgentUserFlow.IsAuthorized;
-                            UpdateTaskCompletion("Authorize Agent", _agentUserFlow.IsAuthorized);
+                            UpdateTaskCompletion("Authorize Agent", _netConfig.AgentUserFlow.IsAuthorized);
                             break;
                         case nameof(AgentUserFlow.IsLoggedInWebsite):
-                            _agentUserFlow.IsLoggedInWebsite = _netConfig.AgentUserFlow.IsLoggedInWebsite;
-                            UpdateTaskCompletion("Login Free Network Monitor", _agentUserFlow.IsLoggedInWebsite);
+                            UpdateTaskCompletion("Login Free Network Monitor", _netConfig.AgentUserFlow.IsLoggedInWebsite);
                             break;
                         case nameof(AgentUserFlow.IsHostsAdded):
-                            _agentUserFlow.IsHostsAdded = _netConfig.AgentUserFlow.IsHostsAdded;
-                            UpdateTaskCompletion("Scan for Hosts", _agentUserFlow.IsHostsAdded);
+                            UpdateTaskCompletion("Scan for Hosts", _netConfig.AgentUserFlow.IsHostsAdded);
                             break;
                     }
                 });
@@ -177,13 +219,14 @@ namespace NetworkMonitor.Maui.ViewModels
 
         public void UpdateTaskCompletion(string taskDescription, bool isCompleted)
         {
+            if (Tasks == null) return;
+
             try
             {
                 var task = Tasks.FirstOrDefault(t => t.TaskDescription == taskDescription);
                 if (task != null)
                 {
                     task.IsCompleted = isCompleted;
-                    OnPropertyChanged(nameof(Tasks));
                 }
             }
             catch (Exception ex)
@@ -193,53 +236,6 @@ namespace NetworkMonitor.Maui.ViewModels
         }
 
 
-        public void SetupTasks()
-        {
-            try
-            {
-                Tasks = new ObservableCollection<TaskItem>
-        {
-            new TaskItem
-            {
-                TaskDescription = "Authorize Agent",
-                IsCompleted = _agentUserFlow.IsAuthorized,
-                TaskAction = new Command(async () =>
-                {
-                    try
-                    {
-                        if (!_isPolling)
-                        {
-                            _isPolling = true;
-                            await ExecuteAuthorizeAsync();
-                            _isPolling = false;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"Error executing authorize action: {ex}");
-                        _isPolling = false; // Ensure we reset the flag even if there's an error
-                    }
-                })
-            },
-            new TaskItem
-            {
-                TaskDescription = "Login Free Network Monitor",
-                IsCompleted = _agentUserFlow.IsLoggedInWebsite,
-                TaskAction = new Command(async () => await ExecuteLoginAsync())
-            },
-            new TaskItem
-            {
-                TaskDescription = "Scan for Hosts",
-                IsCompleted = _agentUserFlow.IsHostsAdded,
-                TaskAction = new Command(async () => await ExecuteScanHostsAsync())
-            }
-        };
-            }
-            catch (Exception e)
-            {
-                _logger.LogError($"Error in SetupTasks : {e.Message}");
-            }
-        }
 
         private async Task ExecuteAuthorizeAsync()
         {
@@ -317,9 +313,6 @@ namespace NetworkMonitor.Maui.ViewModels
         }
 
 
-
-        // New Methods that encapsulate logic originally in MainPage:
-
         public async Task<ResultObj> AuthorizeAsync()
         {
             var resultInit = await _authService.InitializeAsync();
@@ -390,7 +383,23 @@ namespace NetworkMonitor.Maui.ViewModels
     {
         private bool _isCompleted;
         public string TaskDescription { get; set; } = "";
-        public string ButtonText => IsCompleted ? $"{TaskDescription ?? "Task"} (Completed)" : TaskDescription ?? "Task";
+        public string ButtonText => _isCompleted ? $"{TaskDescription ?? "Task"} (Completed)" : TaskDescription ?? "Task";
+
+        public bool IsCompleted
+        {
+            get => _isCompleted;
+            set
+            {
+
+                SetProperty(ref _isCompleted, value);
+                OnPropertyChanged(nameof(ButtonText));
+                OnPropertyChanged(nameof(ButtonBackgroundColor));
+                OnPropertyChanged(nameof(ButtonTextColor));
+
+
+            }
+        }
+
         public Color ButtonBackgroundColor
         {
             get
@@ -403,7 +412,7 @@ namespace NetworkMonitor.Maui.ViewModels
                     {
                         if (ColorResource.GetRequestedTheme() == AppTheme.Dark)
                         {
-                            color = ColorResource.GetResourceColor("Grey950");
+                            color = ColorResource.GetResourceColor("Gray950");
                         }
                         else
                         {
@@ -443,27 +452,9 @@ namespace NetworkMonitor.Maui.ViewModels
             }
         }
 
-        public bool IsCompleted
-        {
-            get => _isCompleted;
-            set
-            {
-                if (_isCompleted != value)
-                {
-                    _isCompleted = value;
-                    // If needed, ensure we're on the main thread before firing PropertyChanged
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        OnPropertyChanged();
-                        OnPropertyChanged(nameof(ButtonText));
-                        OnPropertyChanged(nameof(ButtonBackgroundColor));
-                        OnPropertyChanged(nameof(ButtonTextColor));
-                    });
-                }
-            }
-        }
 
         public ICommand TaskAction { get; set; }
+
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
