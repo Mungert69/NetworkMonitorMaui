@@ -24,7 +24,7 @@ namespace NetworkMonitor.Maui.ViewModels
         public string MonitorLocation => _netConfig?.MonitorLocation ?? "Unknown";
         private bool _isPolling;
         private bool _showTasks = false;
-        private ObservableCollection<TaskItem> _tasks;
+        private List<TaskItem> _tasks;
 
 
         public bool ShowTasks
@@ -49,7 +49,7 @@ namespace NetworkMonitor.Maui.ViewModels
         public event EventHandler<string> NavigateRequested;
 
 
-        public ObservableCollection<TaskItem> Tasks => _tasks;
+        public List<TaskItem> Tasks => _tasks;
 
         public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger logger, IAuthService authService)
         {
@@ -57,7 +57,7 @@ namespace NetworkMonitor.Maui.ViewModels
             _platformService = platformService;
             _logger = logger;
             _authService = authService;
-            SetupTasks();
+
 
             if (_platformService != null)
             {
@@ -78,14 +78,15 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 _logger.LogError("_netConfig.AgentUserFlow is null in MainPageViewModel constructor.");
             }
+            _tasks = GetTasks();
 
         }
 
-        public void SetupTasks()
+        public List<TaskItem> GetTasks()
         {
             try
             {
-                _tasks = new ObservableCollection<TaskItem>
+                return new List<TaskItem>
         {
             new TaskItem
             {
@@ -126,6 +127,16 @@ namespace NetworkMonitor.Maui.ViewModels
             catch (Exception e)
             {
                 _logger.LogError($"Error in SetupTasks : {e.Message}");
+                // Return fallback task list on error
+                return new List<TaskItem>
+                     {
+            new TaskItem
+            {
+                TaskDescription = $"Failed to setup tasks : {e.Message}",
+                IsCompleted = false,
+                TaskAction = null // No action for fallback tasks
+            }
+        };
             }
         }
 
@@ -391,11 +402,14 @@ namespace NetworkMonitor.Maui.ViewModels
             set
             {
 
-                SetProperty(ref _isCompleted, value);
-                OnPropertyChanged(nameof(ButtonText));
-                OnPropertyChanged(nameof(ButtonBackgroundColor));
-                OnPropertyChanged(nameof(ButtonTextColor));
-
+                if (_isCompleted != value)
+                {
+                    _isCompleted = value;
+                    OnPropertyChanged(nameof(IsCompleted));
+                    OnPropertyChanged(nameof(ButtonText));
+                    OnPropertyChanged(nameof(ButtonBackgroundColor));
+                    OnPropertyChanged(nameof(ButtonTextColor));
+                }
 
             }
         }
