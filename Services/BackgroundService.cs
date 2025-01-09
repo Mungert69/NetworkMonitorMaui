@@ -62,7 +62,7 @@ namespace NetworkMonitor.Maui.Services
                 _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _monitorPingInfoView);
                 _rabbitListener = new RabbitListener(_monitorPingProcessor, _loggerFactory.CreateLogger<RabbitListener>(), _netConfig, _processorStates, _cmdProcessorProvider);
                  var resultListener = await _rabbitListener.Setup();
-                //var resultProcessor = await _monitorPingProcessor.Init(new ProcessorInitObj());
+                var resultProcessor = await _monitorPingProcessor.Init(new ProcessorInitObj());
                 // result.Message += resultCmdProcessorFactory.Message+ resultListener.Message + resultProcessor.Message;
                 // result.Success = resultCmdProcessorFactory.Success && resultProcessor.Success && resultListener.Success;
                 result.Success = true;
