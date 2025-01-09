@@ -52,20 +52,20 @@ namespace NetworkMonitor.Maui.Services
             result.Message = " Background Service : Start : ";
             try
             {
-                result = await _rabbitRepo.ConnectAndSetUp();
-                if (!result.Success) {
-                    _isRunning=false;
-                    return result;}
+                 result = await _rabbitRepo.ConnectAndSetUp();
+                // if (!result.Success) {
+                //     _isRunning=false;
+                //     return result;}
                 var resultCmdProcessorFactory=await _cmdProcessorProvider.Setup();
                 var _connectFactory = new NetworkMonitor.Connection.ConnectFactory(_loggerFactory.CreateLogger<ConnectFactory>(), netConfig: _netConfig, _cmdProcessorProvider);
-                _ = _connectFactory.SetupChromium(_netConfig);
+                // _ = _connectFactory.SetupChromium(_netConfig);
                 _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _monitorPingInfoView);
                 _rabbitListener = new RabbitListener(_monitorPingProcessor, _loggerFactory.CreateLogger<RabbitListener>(), _netConfig, _processorStates, _cmdProcessorProvider);
-                var resultListener = await _rabbitListener.Setup();
-                var resultProcessor = await _monitorPingProcessor.Init(new ProcessorInitObj());
-                result.Message += resultCmdProcessorFactory.Message+ resultListener.Message + resultProcessor.Message;
-                result.Success = resultCmdProcessorFactory.Success && resultProcessor.Success && resultListener.Success;
-
+                 var resultListener = await _rabbitListener.Setup();
+                //var resultProcessor = await _monitorPingProcessor.Init(new ProcessorInitObj());
+                // result.Message += resultCmdProcessorFactory.Message+ resultListener.Message + resultProcessor.Message;
+                // result.Success = resultCmdProcessorFactory.Success && resultProcessor.Success && resultListener.Success;
+                result.Success = true;
             }
             catch (Exception e)
             {
