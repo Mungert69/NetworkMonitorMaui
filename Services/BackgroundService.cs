@@ -15,7 +15,7 @@ namespace NetworkMonitor.Maui.Services
     {
         Task<ResultObj> Start();
         Task<ResultObj> Stop();
-        bool IsRunning { get;  }
+        bool IsRunning { get; }
     }
     public class BackgroundService : IBackgroundService
     {
@@ -30,7 +30,7 @@ namespace NetworkMonitor.Maui.Services
         private IMonitorPingInfoView _monitorPingInfoView;
         private LocalProcessorStates _processorStates;
         private ICmdProcessorProvider _cmdProcessorProvider;
-        private bool _isRunning=false;
+        private bool _isRunning = false;
         public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider)
         {
             _logger = logger;
@@ -44,7 +44,7 @@ namespace NetworkMonitor.Maui.Services
 
         }
 
-        public bool IsRunning { get => _isRunning;  }
+        public bool IsRunning { get => _isRunning; }
 
         public async Task<ResultObj> Start()
         {
@@ -52,19 +52,21 @@ namespace NetworkMonitor.Maui.Services
             result.Message = " Background Service : Start : ";
             try
             {
-                 result = await _rabbitRepo.ConnectAndSetUp();
-                // if (!result.Success) {
-                //     _isRunning=false;
-                //     return result;}
-                var resultCmdProcessorFactory=await _cmdProcessorProvider.Setup();
+                result = await _rabbitRepo.ConnectAndSetUp();
+                if (!result.Success)
+                {
+                    _isRunning = false;
+                    return result;
+                }
+                var resultCmdProcessorFactory = await _cmdProcessorProvider.Setup();
                 var _connectFactory = new NetworkMonitor.Connection.ConnectFactory(_loggerFactory.CreateLogger<ConnectFactory>(), netConfig: _netConfig, _cmdProcessorProvider);
-                // _ = _connectFactory.SetupChromium(_netConfig);
+                 _ = _connectFactory.SetupChromium(_netConfig);
                 _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _monitorPingInfoView);
                 _rabbitListener = new RabbitListener(_monitorPingProcessor, _loggerFactory.CreateLogger<RabbitListener>(), _netConfig, _processorStates, _cmdProcessorProvider);
-                 var resultListener = await _rabbitListener.Setup();
+                var resultListener = await _rabbitListener.Setup();
                 var resultProcessor = await _monitorPingProcessor.Init(new ProcessorInitObj());
-                // result.Message += resultCmdProcessorFactory.Message+ resultListener.Message + resultProcessor.Message;
-                // result.Success = resultCmdProcessorFactory.Success && resultProcessor.Success && resultListener.Success;
+                result.Message += resultCmdProcessorFactory.Message + resultListener.Message + resultProcessor.Message;
+                result.Success = resultCmdProcessorFactory.Success && resultProcessor.Success && resultListener.Success;
                 result.Success = true;
             }
             catch (Exception e)
@@ -73,7 +75,7 @@ namespace NetworkMonitor.Maui.Services
                 result.Message += $" Error : failed to start background service . Error was : {e.Message}";
                 _logger.LogError(result.Message);
             }
-            _isRunning=result.Success;
+            _isRunning = result.Success;
             return result;
 
         }
@@ -119,7 +121,7 @@ namespace NetworkMonitor.Maui.Services
                 _logger.LogError("Error during shutting down RabbitRepo: " + e.ToString());
                 result.Success = false;
             }
-            _isRunning=result.Success;
+            _isRunning = result.Success;
 
             return result;
         }
