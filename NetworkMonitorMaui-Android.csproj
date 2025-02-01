@@ -8,8 +8,8 @@
                 <AssemblyName>NetworkMonitorMaui</AssemblyName>
                 <RootNamespace>NetworkMonitor.Maui</RootNamespace>
                 <!-- Display name -->
-                <ApplicationDisplayVersion>0.0.1</ApplicationDisplayVersion>
-                <ApplicationVersion>1</ApplicationVersion>
+                <ApplicationDisplayVersion>0.0.2</ApplicationDisplayVersion>
+                <ApplicationVersion>2</ApplicationVersion>
                  <DefineConstants>ANDROID</DefineConstants>
                 <AndroidSdkDirectory>/usr/lib/android-sdk</AndroidSdkDirectory>
               
