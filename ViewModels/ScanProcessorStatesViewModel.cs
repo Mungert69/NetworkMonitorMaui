@@ -32,12 +32,12 @@ namespace NetworkMonitor.Maui.ViewModels
         }
 
 
-        public ScanProcessorStatesViewModel(ILogger<ScanProcessorStatesViewModel> logger, ILocalCmdProcessorStates cmdProcessorStates, IApiService apiService,NetConnectConfig netConfig)
+        public ScanProcessorStatesViewModel(ILogger<ScanProcessorStatesViewModel> logger, ICmdProcessorProvider cmdProcessorProvider, IApiService apiService,NetConnectConfig netConfig)
         {
             try
             {
                 _logger = logger;
-                _cmdProcessorStates = cmdProcessorStates;
+                _cmdProcessorStates = cmdProcessorProvider.GetProcessorStates("Nmap");
                 _cmdProcessorStates.EndpointTypes = netConfig.EndpointTypes;
                 _cmdProcessorStates.UseDefaultEndpointType = netConfig.UseDefaultEndpointType;
                 _cmdProcessorStates.DefaultEndpointType = netConfig.DefaultEndpointType;
