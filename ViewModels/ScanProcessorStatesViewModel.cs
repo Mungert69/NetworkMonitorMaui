@@ -13,8 +13,8 @@ namespace NetworkMonitor.Maui.ViewModels
 {
     public class ScanProcessorStatesViewModel : BasePopupViewModel
     {
-        private ILocalCmdProcessorStates _cmdProcessorStates;
-        private ILogger _logger;
+        private readonly ILocalCmdProcessorStates _cmdProcessorStates;
+        private readonly ILogger _logger;
         private readonly IApiService _apiService;
         public ObservableCollection<string> EndpointTypes { get; set; }
         public ObservableCollection<NetworkInterfaceInfo> NetworkInterfaces =>
@@ -32,7 +32,7 @@ namespace NetworkMonitor.Maui.ViewModels
         }
 
 
-        public ScanProcessorStatesViewModel(ILogger logger, ILocalCmdProcessorStates cmdProcessorStates, IApiService apiService,NetConnectConfig netConfig)
+        public ScanProcessorStatesViewModel(ILogger<ScanProcessorStatesViewModel> logger, ILocalCmdProcessorStates cmdProcessorStates, IApiService apiService,NetConnectConfig netConfig)
         {
             try
             {

@@ -12,10 +12,10 @@ namespace NetworkMonitor.Maui.ViewModels
 {
     public class MainPageViewModel : INotifyPropertyChanged
     {
-        private NetConnectConfig _netConfig;
-        private IPlatformService _platformService;
-        private ILogger _logger;
-        private IAuthService _authService;
+        private readonly NetConnectConfig _netConfig;
+        private readonly IPlatformService _platformService;
+        private readonly ILogger _logger;
+        private readonly IAuthService _authService;
         private CancellationTokenSource? _pollingCts;
         private bool _isServiceStarted;
         private bool _disableAgentOnServiceShutdown;
@@ -51,7 +51,7 @@ namespace NetworkMonitor.Maui.ViewModels
 
         public List<TaskItem> Tasks => _tasks;
 
-        public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger logger, IAuthService authService)
+        public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger<MainPageViewModel> logger, IAuthService authService)
         {
             _netConfig = netConfig;
             _platformService = platformService;

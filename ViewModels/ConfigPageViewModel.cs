@@ -8,10 +8,10 @@ namespace NetworkMonitor.Maui.ViewModels
 {
     public class ConfigPageViewModel : INotifyPropertyChanged
     {
-        private NetConnectConfig _netConfig;
-        private ILogger _logger;
+        private readonly NetConnectConfig _netConfig;
+        private readonly ILogger _logger;
 
-        public ConfigPageViewModel(ILogger logger, NetConnectConfig netConfig)
+        public ConfigPageViewModel(ILogger<ConfigPageViewModel> logger, NetConnectConfig netConfig)
         {
             try {
                 _logger = logger;

@@ -9,9 +9,9 @@ namespace NetworkMonitor.Maui.ViewModels
 {
     public class ProcessorStatesViewModel : BasePopupViewModel
     {
-        private LocalProcessorStates _processorStates;
+        private readonly LocalProcessorStates _processorStates;
         public ICommand ShowPopupCommand { get; private set; }
-        private ILogger _logger;
+        private readonly ILogger _logger;
         private string _popupMessageType = "";
         // Local backing fields
         private bool _isRunning;
@@ -23,7 +23,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private string _runningMessage;
         private string _connectRunningMessage;
 
-        public ProcessorStatesViewModel(ILogger logger, LocalProcessorStates processorStates)
+        public ProcessorStatesViewModel(ILogger<ProcessorStatesViewModel> logger, LocalProcessorStates processorStates)
         {
             try
             {
