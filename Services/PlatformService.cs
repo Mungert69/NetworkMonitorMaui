@@ -40,7 +40,7 @@ namespace NetworkMonitor.Maui.Services
         }*/
 
 
-        public PlatformService( ILogger logger)
+        public PlatformService( ILogger<PlatformService> logger)
         {
             //_dialogService = dialogService;
 
@@ -100,7 +100,7 @@ namespace NetworkMonitor.Maui.Services
         private BroadcastReceiver _serviceStatusReceiver;
         private TaskCompletionSource<bool> _serviceOperationCompletionSource;
 
-        public AndroidPlatformService( ILogger<AndroidPlatformService> logger) : base( logger)
+        public AndroidPlatformService( ILogger<PlatformService> logger) : base( logger)
         {
             try
             {
@@ -314,7 +314,7 @@ var powerService=Context.PowerService;
     {
         private IBackgroundService _backgroundService;
 
-        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<WindowsPlatformService> logger) : base( logger)
+        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger) : base( logger)
         {
             _backgroundService = backgroundService;
         }
