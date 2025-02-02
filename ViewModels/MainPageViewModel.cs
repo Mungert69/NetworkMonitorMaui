@@ -461,7 +461,7 @@ namespace NetworkMonitor.Maui.ViewModels
                 }
                 catch
                 {
-                    return Colors.White;
+                    return Colors.Black;
                 }
             }
         }
