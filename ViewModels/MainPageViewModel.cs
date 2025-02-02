@@ -5,6 +5,7 @@ using NetworkMonitor.Objects;
 using NetworkMonitor.Connection;
 using System.Windows.Input;
 using NetworkMonitor.Maui.Services;
+using NetworkMonitor.Maui;
 using Microsoft.Extensions.Logging;
 using NetworkMonitor.Processor.Services;
 
@@ -25,6 +26,8 @@ namespace NetworkMonitor.Maui.ViewModels
         private bool _isPolling;
         private bool _showTasks = false;
         private List<TaskItem> _tasks;
+         private ColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+
 
 
         public bool ShowTasks

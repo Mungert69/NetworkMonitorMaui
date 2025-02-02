@@ -1,11 +1,14 @@
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Layouts;
-using NetworkMonitor.Maui;
+using NetworkMonitor.Objects;
+using NetworkMonitor.Maui.Services;
 namespace NetworkMonitor.Maui.Controls;
 public class AgentIndicator : ContentView
 {
 
     private BoxView circle;
+    private ColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+
     public static readonly BindableProperty IsUpProperty = BindableProperty.Create(
         nameof(IsUp), typeof(bool), typeof(AgentIndicator), default(bool), propertyChanged: OnIsUpChanged);
 

@@ -1,4 +1,3 @@
-using MetroLog.MicrosoftExtensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NetworkMonitor.Connection;

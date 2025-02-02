@@ -1,13 +1,14 @@
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Layouts;
 using NetworkMonitor.Objects; 
-using NetworkMonitor.Maui;
+using NetworkMonitor.Maui.Services;
 
 namespace NetworkMonitor.Maui.Controls
 {
     public class AgentTriIndicator : ContentView
     {
         private BoxView circle;
+        private ColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
 
         public static readonly BindableProperty ConnectStateProperty = BindableProperty.Create(nameof(ConnectState), typeof(ConnectState), typeof(AgentTriIndicator), ConnectState.Error, propertyChanged: OnConnectStateChanged);
 
