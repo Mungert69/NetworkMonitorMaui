@@ -398,6 +398,8 @@ namespace NetworkMonitor.Maui.ViewModels
     {
         private bool _isCompleted;
         public string TaskDescription { get; set; } = "";
+         private IColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+
         public string ButtonText => _isCompleted ? $"{TaskDescription ?? "Task"} (Completed)" : TaskDescription ?? "Task";
 
         public bool IsCompleted
