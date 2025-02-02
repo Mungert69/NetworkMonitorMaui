@@ -1,4 +1,5 @@
 using NetworkMonitor.Objects;
+using NetworkMonitor.Maui.Controls;
 namespace NetworkMonitor.Maui.Services
 {
     public interface IRootNamespaceProvider
@@ -8,6 +9,6 @@ namespace NetworkMonitor.Maui.Services
         IServiceProvider ServiceProvider { get; }
         string GetAppDataDirectory();
         int GetDrawable(string drawableName);
-        ColorResource ColorResource{get;}
+        IColorResource ColorResource{get;}
     }
 }

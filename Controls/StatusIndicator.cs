@@ -13,7 +13,7 @@ public class StatusIndicator : ContentView
     private BoxView _circle;
     private Timer _animationTimer;
     CancellationTokenSource _animationCts;
-     private ColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+     private IColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
 
     public static readonly BindableProperty IsUpProperty = BindableProperty.Create(
         nameof(IsUp), typeof(bool), typeof(StatusIndicator), default(bool), propertyChanged: OnIsUpChanged);

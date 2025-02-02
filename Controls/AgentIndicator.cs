@@ -7,7 +7,7 @@ public class AgentIndicator : ContentView
 {
 
     private BoxView circle;
-    private ColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+    private IColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
 
     public static readonly BindableProperty IsUpProperty = BindableProperty.Create(
         nameof(IsUp), typeof(bool), typeof(AgentIndicator), default(bool), propertyChanged: OnIsUpChanged);
