@@ -67,7 +67,7 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 _isServiceStarted = _platformService?.IsServiceStarted ?? false;
                 _disableAgentOnServiceShutdown = _platformService?.DisableAgentOnServiceShutdown ?? false;
-                _serviceMessage = _platformService?.ServiceMessage ?? "No Service Message";
+                _serviceMessage = _platformService?.ServiceMessage ?? "The Agent is disabled";
             }
             else
             {
@@ -363,7 +363,7 @@ namespace NetworkMonitor.Maui.ViewModels
         public async Task<ResultObj> ScanHostsAsync()
         {
             // Return the navigation route
-            return new ResultObj { Success = true, Message = "Scan" };
+            return new ResultObj { Success = true, Message = "//Scan" };
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
