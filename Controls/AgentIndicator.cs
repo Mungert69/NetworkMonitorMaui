@@ -34,6 +34,7 @@ public class AgentIndicator : ContentView
             HeightRequest = 25,
             CornerRadius = 12,
             Color = ColorResource.GetResourceColor("Error"),
+            Background=new Microsoft.Maui.Graphics.Color(0, 0, 0, 0)
         };
 
 

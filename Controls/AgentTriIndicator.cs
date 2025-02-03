@@ -33,7 +33,8 @@ namespace NetworkMonitor.Maui.Controls
                 WidthRequest = 25,
                 HeightRequest = 25,
                 CornerRadius = 12,
-                Color = ColorResource.GetResourceColor("Error"), // Default color
+                Color = ColorResource.GetResourceColor("Error"),
+                Background=new Microsoft.Maui.Graphics.Color(0, 0, 0, 0)
             };
 
             var layout = new AbsoluteLayout();

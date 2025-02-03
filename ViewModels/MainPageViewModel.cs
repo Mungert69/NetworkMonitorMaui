@@ -457,18 +457,28 @@ namespace NetworkMonitor.Maui.ViewModels
         {
             get
             {
+                 Color color = Colors.Green;
                 try
                 {
                     if (_isCompleted)
                     {
-                        return ColorResource.GetResourceColor("Primary");
+                        color = ColorResource.GetResourceColor("Primary");
                     }
-                    else { return Colors.White; }
+                    else { 
+                          if (ColorResource.GetRequestedTheme() == AppTheme.Dark)
+                        {
+                           color = Colors.White;
+                        }
+                        else
+                        {
+                          
+                             color = Colors.Black;  
+                        }
+                    }
+                   
                 }
-                catch
-                {
-                    return Colors.Black;
-                }
+                catch {}
+                return color;
             }
         }
 

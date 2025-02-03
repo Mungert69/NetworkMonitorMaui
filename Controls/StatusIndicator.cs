@@ -141,7 +141,7 @@ public class StatusIndicator : ContentView
             HeightRequest = 30,
             CornerRadius = 15,
             Color = ColorResource.GetResourceColor("Error"),
-            //Background = ColorResource.GetResourceColor("White")
+            Background =new Microsoft.Maui.Graphics.Color(0, 0, 0, 0)
         };
 
         _ripple = new BoxView
@@ -151,7 +151,7 @@ public class StatusIndicator : ContentView
             CornerRadius = 15,
             Opacity = 0, // Initially invisible
             Color = ColorResource.GetResourceColor("Secondary"),
-            //Background = ColorResource.GetResourceColor("White")
+            Background =new Microsoft.Maui.Graphics.Color(0, 0, 0, 0)
         };
 
         // Add the ripple to the layout
