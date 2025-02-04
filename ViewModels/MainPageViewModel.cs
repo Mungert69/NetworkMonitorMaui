@@ -363,7 +363,7 @@ namespace NetworkMonitor.Maui.ViewModels
         public async Task<ResultObj> ScanHostsAsync()
         {
             // Return the navigation route
-            return new ResultObj { Success = true, Message = "//Scan" };
+            return new ResultObj { Success = true, Message = "/Scan" };
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
