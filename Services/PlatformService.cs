@@ -122,12 +122,12 @@ namespace NetworkMonitor.Maui.Services
             Android.App.Application.Context.RegisterReceiver(_serviceStatusReceiver, filter);
         }
 
-        public override bool RequestPermissionsAsync()
+      public override bool RequestPermissionsAsync()
         {
             try
             {         
-                if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
-                {
+               if (!OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.M))
+                     {
 #pragma warning disable CA1416
 var powerService=Context.PowerService;
                     if (powerService!=null) {
@@ -164,7 +164,8 @@ var powerService=Context.PowerService;
             {
                  Android.Content.Intent? intent = new Android.Content.Intent(Android.App.Application.Context,typeof(AndroidBackgroundService));
                 if (intent!=null && Android.App.Application.Context!=null){
-                     if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+                     if (!OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.O))
+                    
                 {
                         Android.App.Application.Context.StartForegroundService(intent);
                 }
@@ -173,10 +174,6 @@ var powerService=Context.PowerService;
                           Android.App.Application.Context.StartService(intent);
                 }
                 }
-                
-               
-                //_serviceMessage = " Android Service started successfully.";
-                //_isServiceStarted=true;
 
                 return _serviceOperationCompletionSource.Task;
             }
@@ -211,20 +208,22 @@ var powerService=Context.PowerService;
             }
         }
 
-        public  override void OnUpdateServiceState(ResultObj result, bool state)
+        public  override void OnUpdateServiceState(ResultObj result, bool isStartCall)
         {
                  try
             {
-                 IsServiceStarted = state;
                      // Update PlatformService properties
                     if (result.Success)
                     {
                      
                      
-                        if (IsServiceStarted) ServiceMessage = " Agent enabled. Complete tasks below to start monitoring...";
-                        else
+                        if (isStartCall) {ServiceMessage = " Agent enabled. Complete tasks below to start monitoring...";
+                          IsServiceStarted = true;
+                
+                         } else
                         {
                             ServiceMessage = " Agent disabled. You can now close the App.";
+                            IsServiceStarted=false;
                         }
                         _logger.LogInformation(result.Message+ServiceMessage);
                         _serviceOperationCompletionSource?.SetResult(true);
@@ -233,7 +232,7 @@ var powerService=Context.PowerService;
                     else
                     {
                         var stateStr = "start";
-                        if (IsServiceStarted) stateStr = "stop";
+                        if (!isStartCall) stateStr = "stop";
 
                         ServiceMessage = $" Agent service failed to {stateStr}. Service message was : {result.Message}";
                          _logger.LogError(result.Message+ServiceMessage);

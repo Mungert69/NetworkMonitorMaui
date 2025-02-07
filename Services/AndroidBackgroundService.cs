@@ -67,14 +67,13 @@ namespace NetworkMonitor.Maui.Services
             _processorStates = _rootProvider.ServiceProvider.GetRequiredService<LocalProcessorStates>();
             _cmdProcessorProvider = _rootProvider.ServiceProvider.GetRequiredService<ICmdProcessorProvider>();
             _platformService = _rootProvider.ServiceProvider.GetRequiredService<IPlatformService>();
-            _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider);
-            
+              
         }
         private async Task StartAsync()
         {
             try
             {
-                
+                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider);
                 var result = await _backgroundService.Start();
                 _platformService.OnUpdateServiceState(result, true);
 
@@ -87,6 +86,7 @@ namespace NetworkMonitor.Maui.Services
 
         private async Task StopAsync()
         {
+             if (_backgroundService == null) return;
             try
             {
                 var result = await _backgroundService.Stop();
@@ -111,9 +111,9 @@ namespace NetworkMonitor.Maui.Services
             {
                 _cts = new CancellationTokenSource();
             }
-           
-            if (intent.Action == "STOP_SERVICE")
-                {
+            string action = intent?.Action;
+            if (action == "STOP_SERVICE")
+            {
                 try
                 {
                     _logger.LogInformation($" SERVICE : stopping");
@@ -137,27 +137,31 @@ namespace NetworkMonitor.Maui.Services
                     return StartCommandResult.Sticky;
                 }
             }
-           
+        Task.Run(async () =>
+        {
             try
             {
                 int logoId = _rootProvider.GetDrawable("logo");
                 int viewId = _rootProvider.GetDrawable("view");
                 _logger.LogInformation($" SERVICE : drawables {logoId} : {viewId}");
-                   if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+                if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.O))
                    {
 #pragma warning disable CA1416, CA1422
                        Notification notification;
                        NotificationChannel channel = new NotificationChannel("channel_id", "Free Network Monitor Agent", NotificationImportance.Low);
+                       channel.Description = "Network monitoring service";
+                        channel.SetSound(null, null); // Optional: Disable sound
+                        channel.EnableVibration(false); // Optional: Disable vibration
                        NotificationManager notificationManager = (NotificationManager)GetSystemService(Context.NotificationService);
                        notificationManager.CreateNotificationChannel(channel);
                        /*var stopAction = new Notification.Action.Builder(
-                                _rootProvider.GetDrawable(".stop,
+                                _rootProvider.GetDrawable("stop"),
                                "Stop",
                                GetStopServicePendingIntent())
                                 .Build();
 
                        var viewAction = new Notification.Action.Builder(
-                             _rootProvider.GetDrawable(".view,
+                             _rootProvider.GetDrawable("view"),
                             "View",
                             GetViewAppPendingIntent())
                            .Build();
@@ -174,7 +178,7 @@ namespace NetworkMonitor.Maui.Services
 
                        _logger.LogInformation($" SERVICE : cratetd notification");
 
-                       if (Build.VERSION.SdkInt < BuildVersionCodes.Tiramisu)
+                      if (!OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.Tiramisu))
                        {
                            StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification);
                        }
@@ -194,13 +198,12 @@ namespace NetworkMonitor.Maui.Services
                                        .SetContentText("Monitoring network...")
                                        .SetSmallIcon( _rootProvider.GetDrawable("logo"))
                                        .SetOngoing(true)
-                                       //.AddAction( _rootProvider.GetDrawable(".stop, "Stop", GetStopServicePendingIntent())
                                        .AddAction( _rootProvider.GetDrawable("view"), "Open", GetViewAppPendingIntent()) // Ensure you have an icon for 'View App'
                                        .Build();
                        StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification);
 #pragma warning restore CS0618
                    }
-                    StartAsync();
+                    await StartAsync();
                    
             }
             catch (Exception e)
@@ -209,6 +212,7 @@ namespace NetworkMonitor.Maui.Services
                 _platformService.OnUpdateServiceState(result, true);
             }
             _logger.LogInformation($" SERVICE : StartCommand Start completed");
+        }, _cts.Token);
             return StartCommandResult.Sticky;
         }
 
@@ -219,7 +223,7 @@ namespace NetworkMonitor.Maui.Services
                 Task.Run(async () =>
                 {
                     await StopAsync();
-                }).Wait(TimeSpan.FromSeconds(10)); // Give it 5 seconds to complete
+                }).Wait(TimeSpan.FromSeconds(5)); // Give it 5 seconds to complete
             }
             catch (Exception e)
             {
