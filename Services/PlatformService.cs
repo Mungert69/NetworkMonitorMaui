@@ -247,6 +247,7 @@ var powerService=Context.PowerService;
             catch (Exception e)
             {
                 _logger.LogError($" Error : failed to run OnUpdateServiceState  . Error was : {e.Message}");
+                  _serviceOperationCompletionSource?.SetResult(false);
             }
     
         }

@@ -2,6 +2,8 @@
 using Android.App;
 using Android.Content;
 using Android.OS;
+using Android.Graphics;
+using AndroidX.Core.App;
 using Microsoft.Extensions.Logging;
 using NetworkMonitor.Connection;
 using NetworkMonitor.Processor.Services;
@@ -11,7 +13,6 @@ using NetworkMonitor.Utils.Helpers;
 using NetworkMonitor.DTOs;
 using NetworkMonitor.Objects;
 using Microsoft.Extensions.Configuration;
-using AndroidX.Core.App;
 using NetworkMonitor.Maui.Services;
 using NetworkMonitor.Maui;
 
@@ -43,10 +44,17 @@ namespace NetworkMonitor.Maui.Services
         public const string ServiceStatusExtra = "ServiceStatus";
         public const string ServiceMessageExtra = "ServiceMessage";
 
+    private NotificationManagerCompat _compatManager;
+    private int messageId=0;
+    private string _channelName = "FreeNetworkMonitor";
+    private string _channelId="fre_mon_channel";
+    private string _channelDescription="Free Network Monitor Agent notification channel";
+    private   bool _channelInitialized = false;
+           
+
         public AndroidBackgroundService()
         {
-            _rootProvider = ServiceInitializer.RootProvider;
-
+            _rootProvider = ServiceInitializer.RootProvider;      
         }
 
         public override IBinder OnBind(Intent intent)
@@ -116,16 +124,9 @@ namespace NetworkMonitor.Maui.Services
             {
                 try
                 {
-                    _logger.LogInformation($" SERVICE : stopping");
-
-                    Task.Run(async () =>
-                        {
-#pragma warning disable CA1422
-                            StopForeground(true);
-                            //StopBackgroundService(true);
-#pragma warning restore CA1422
-                            await StopAsync();
-                        }, _cts.Token);
+                    _logger.LogInformation($" SERVICE : stopping");              
+                    StopForeground(true);
+                    _ = StopAsync();          
                     _logger.LogInformation($" SERVICE : StartCommand Stop Completed");
             
                     return StartCommandResult.Sticky;
@@ -137,73 +138,42 @@ namespace NetworkMonitor.Maui.Services
                     return StartCommandResult.Sticky;
                 }
             }
-        Task.Run(async () =>
-        {
+        
             try
             {
                 int logoId = _rootProvider.GetDrawable("logo");
                 int viewId = _rootProvider.GetDrawable("view");
                 _logger.LogInformation($" SERVICE : drawables {logoId} : {viewId}");
-                if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.O))
-                   {
-#pragma warning disable CA1416, CA1422
-                       Notification notification;
-                       NotificationChannel channel = new NotificationChannel("channel_id", "Free Network Monitor Agent", NotificationImportance.Low);
-                       channel.Description = "Network monitoring service";
-                        channel.SetSound(null, null); // Optional: Disable sound
-                        channel.EnableVibration(false); // Optional: Disable vibration
-                       NotificationManager notificationManager = (NotificationManager)GetSystemService(Context.NotificationService);
-                       notificationManager.CreateNotificationChannel(channel);
-                       /*var stopAction = new Notification.Action.Builder(
-                                _rootProvider.GetDrawable("stop"),
-                               "Stop",
-                               GetStopServicePendingIntent())
-                                .Build();
-
-                       var viewAction = new Notification.Action.Builder(
-                             _rootProvider.GetDrawable("view"),
-                            "View",
-                            GetViewAppPendingIntent())
-                           .Build();
-                           */
-                       _logger.LogInformation($" SERVICE : created notification channel.");
-
-                       notification = new Notification.Builder(this, "channel_id")
-                           .SetAutoCancel(false)
-                           .SetOngoing(true)
-                           .SetContentTitle("Free Network Monitor Agent")
-                           .SetContentText("Monitoring network...")
-                           .SetSmallIcon( _rootProvider.GetDrawable("logo"))
-                           .Build();
-
-                       _logger.LogInformation($" SERVICE : cratetd notification");
-
-                      if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.Tiramisu))
-                       {
-                            StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification,
-                            Android.Content.PM.ForegroundService.TypeConnectedDevice);        
-                       }
-                       else
-                       {
-                             StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification); 
-                       }
-#pragma warning restore CA1416, CA1422
-                   }
-                   else
-                   {
-#pragma warning disable CS0618
-                       // For API below 26
-                       Notification notification = new NotificationCompat.Builder(this)
-                                       .SetContentTitle("Free Network Monitor Agent")
-                                       .SetContentText("Monitoring network...")
-                                       .SetSmallIcon( _rootProvider.GetDrawable("logo"))
-                                       .SetOngoing(true)
-                                       .AddAction( _rootProvider.GetDrawable("view"), "Open", GetViewAppPendingIntent()) // Ensure you have an icon for 'View App'
-                                       .Build();
-                       StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification);
-#pragma warning restore CS0618
-                   }
-                    await StartAsync();
+                if (!_channelInitialized)
+                {
+                    CreateNotificationChannel();
+                }
+                var notificationIntent = new Intent(this, _rootProvider.MainActivity);
+                var pendingIntent = PendingIntent.GetActivity(this, 0, notificationIntent, 0);
+ 
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, _channelId)
+                .SetContentTitle("Network Monitor Agent")
+                .SetContentText("Service Running...")
+                .SetLargeIcon(BitmapFactory.DecodeResource(Platform.AppContext.Resources, logoId))
+                .SetSmallIcon(logoId)
+                .SetContentIntent(pendingIntent)
+                .SetOngoing(true);
+        
+                Notification notification = builder.Build();
+                  _logger.LogInformation($" SERVICE : created notification");
+               
+                                       
+                if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.Tiramisu))
+                {
+                    StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification,
+                    Android.Content.PM.ForegroundService.TypeConnectedDevice);        
+                }
+                else
+                {
+                    StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification); 
+                }
+               
+                _ = StartAsync();
                    
             }
             catch (Exception e)
@@ -213,9 +183,30 @@ namespace NetworkMonitor.Maui.Services
                 _platformService.OnUpdateServiceState(result, true);
             }
             _logger.LogInformation($" SERVICE : StartCommand Start completed");
-        }, _cts.Token);
+
             return StartCommandResult.Sticky;
         }
+
+       private  void  CreateNotificationChannel()
+    {
+        // Create the notification channel, but only on API 26+.
+        if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.O))
+        {
+            var channelNameJava = new Java.Lang.String(_channelName);
+            var channel = new NotificationChannel(_channelId, channelNameJava, NotificationImportance.Default)
+            {
+                Description = _channelDescription
+            };
+            // Register the channel
+            NotificationManager manager = (NotificationManager)Platform.AppContext.GetSystemService(Context.NotificationService);
+            manager.CreateNotificationChannel(channel);
+            _channelInitialized=true;
+             _logger.LogInformation($" SERVICE : created notification channel.");
+
+
+        }
+     
+    }
 
         public override void OnDestroy()
         {
