@@ -148,16 +148,13 @@ namespace NetworkMonitor.Maui.Services
                 {
                     CreateNotificationChannel();
                 }
-                var notificationIntent = new Intent(this, _rootProvider.MainActivity);
-                var pendingIntent = PendingIntent.GetActivity(this, 0, notificationIntent, 0);
- 
+               
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, _channelId)
                 .SetContentTitle("Network Monitor Agent")
                 .SetContentText("Service Running...")
                 .SetLargeIcon(BitmapFactory.DecodeResource(Platform.AppContext.Resources, logoId))
                 .SetSmallIcon(logoId)
-                .SetContentIntent(pendingIntent)
-                .SetOngoing(true);
+               .SetOngoing(true);
         
                 Notification notification = builder.Build();
                   _logger.LogInformation($" SERVICE : created notification");
