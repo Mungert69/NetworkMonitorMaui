@@ -34,13 +34,13 @@ namespace NetworkMonitor.Maui.Services
                 }
             }
         }
-       /* protected void OnServiceStateChanged()
-        {
-            ServiceStateChanged?.Invoke(this, EventArgs.Empty);
-        }*/
+        /* protected void OnServiceStateChanged()
+         {
+             ServiceStateChanged?.Invoke(this, EventArgs.Empty);
+         }*/
 
 
-        public PlatformService( ILogger<PlatformService> logger)
+        public PlatformService(ILogger<PlatformService> logger)
         {
             //_dialogService = dialogService;
 
@@ -85,12 +85,12 @@ namespace NetworkMonitor.Maui.Services
         {
             return Task.CompletedTask;
         }
-          public virtual bool RequestPermissionsAsync()
+        public virtual bool RequestPermissionsAsync()
         {
             return true;
         }
 
-       public virtual void OnUpdateServiceState(ResultObj result, bool state){}
+        public virtual void OnUpdateServiceState(ResultObj result, bool state) { }
         public string ServiceMessage { get => _serviceMessage; set => _serviceMessage = value; }
         public bool DisableAgentOnServiceShutdown { get => _disableAgentOnServiceShutdown; set => _disableAgentOnServiceShutdown = value; }
     }
@@ -126,7 +126,7 @@ namespace NetworkMonitor.Maui.Services
         {
             try
             {         
-               if (!OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.M))
+               if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.M))
                      {
 #pragma warning disable CA1416
 var powerService=Context.PowerService;
@@ -164,17 +164,15 @@ var powerService=Context.PowerService;
             {
                  Android.Content.Intent? intent = new Android.Content.Intent(Android.App.Application.Context,typeof(AndroidBackgroundService));
                 if (intent!=null && Android.App.Application.Context!=null){
-                     if (!OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.O))
-                    
+                if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.O))            
                 {
                         Android.App.Application.Context.StartForegroundService(intent);
                 }
-                else{
-  
+                else
+                {
                           Android.App.Application.Context.StartService(intent);
                 }
                 }
-
                 return _serviceOperationCompletionSource.Task;
             }
             catch (Exception ex)
@@ -313,7 +311,7 @@ var powerService=Context.PowerService;
     {
         private IBackgroundService _backgroundService;
 
-        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger) : base( logger)
+        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger) : base(logger)
         {
             _backgroundService = backgroundService;
         }
@@ -370,7 +368,7 @@ var powerService=Context.PowerService;
                 if (result.Success) _serviceMessage = " Agent disabled. You can now close the App.";
                 else _serviceMessage = $" Agent service failed to stop. Service message was : {result.Message}";
                 if (result.Success) _isServiceStarted = false;
-               // OnServiceStateChanged();
+                // OnServiceStateChanged();
             }
             catch (Exception ex)
             {

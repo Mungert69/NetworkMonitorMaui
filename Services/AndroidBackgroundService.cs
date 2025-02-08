@@ -178,14 +178,14 @@ namespace NetworkMonitor.Maui.Services
 
                        _logger.LogInformation($" SERVICE : cratetd notification");
 
-                      if (!OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.Tiramisu))
+                      if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.Tiramisu))
                        {
-                           StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification);
+                            StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification,
+                            Android.Content.PM.ForegroundService.TypeConnectedDevice);        
                        }
                        else
                        {
-                           StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification,
-                            Android.Content.PM.ForegroundService.TypeConnectedDevice);
+                             StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification); 
                        }
 #pragma warning restore CA1416, CA1422
                    }
@@ -209,6 +209,7 @@ namespace NetworkMonitor.Maui.Services
             catch (Exception e)
             {
                 var result = new ResultObj() { Message = $" Error : Failed to Start service . Error was : {e.Message}", Success = false };
+                result.Success=false;
                 _platformService.OnUpdateServiceState(result, true);
             }
             _logger.LogInformation($" SERVICE : StartCommand Start completed");
