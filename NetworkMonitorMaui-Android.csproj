@@ -13,9 +13,7 @@
                  <DefineConstants>ANDROID</DefineConstants>
                 <AndroidSdkDirectory>/usr/lib/android-sdk</AndroidSdkDirectory>
               
-        </PropertyGroup>
-
-     
+        </PropertyGroup> 
 
      
         <ItemGroup>
