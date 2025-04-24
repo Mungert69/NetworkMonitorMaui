@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
         <PropertyGroup>
                 <TargetFrameworks>net9.0-windows10.0.19041.0</TargetFrameworks>
                 <UseMaui>true</UseMaui>
@@ -7,8 +7,8 @@
                 <AssemblyName>NetworkMonitorMaui</AssemblyName>
                 <RootNamespace>NetworkMonitor.Maui</RootNamespace>
                 <!-- Display name -->
-                <ApplicationDisplayVersion>0.0.1</ApplicationDisplayVersion>
-                <ApplicationVersion>1</ApplicationVersion>
+                <ApplicationDisplayVersion>0.0.2</ApplicationDisplayVersion>
+                <ApplicationVersion>2</ApplicationVersion>
                  <DefineConstants>WINDOWS</DefineConstants>
         </PropertyGroup>
 
@@ -16,17 +16,19 @@
 
      
         <ItemGroup>
+            
                 <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
-                <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
-                <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.2" />
-                <PackageReference Include="CommunityToolkit.Maui" Version="11.1.0" />
+                <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />
+                <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.4" />
+                <PackageReference Include="CommunityToolkit.Maui" Version="11.2.0" />
                 <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-                <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.40" />
-                <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.40" />
+                <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.60" />
+                <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.60" />
                 <PackageReference Include="MetroLog.Maui" Version="2.1.0" />
-                <PackageReference Include="Microsoft.Maui.Core" Version="9.0.40" />
-                <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.40" />
-                <PackageReference Include="Microsoft.Maui.Graphics" Version="9.0.40" />
+                <PackageReference Include="Microsoft.Maui.Core" Version="9.0.60" />
+                <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.60" />
+                <PackageReference Include="Microsoft.Maui.Graphics" Version="9.0.60" />
+          
 
         </ItemGroup>
         <ItemGroup>
