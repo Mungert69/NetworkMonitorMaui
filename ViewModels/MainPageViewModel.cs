@@ -27,7 +27,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private bool _isPolling;
         private bool _showTasks = false;
         private List<TaskItem> _tasks;
-         private IColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+        private IColorResource ColorResource = ServiceInitializer.RootProvider.ColorResource;
 
 
 
@@ -82,7 +82,8 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 _logger.LogError("_netConfig.AgentUserFlow is null in MainPageViewModel constructor.");
             }
-            _tasks = GetTasks();
+            if (_netConfig.IsChatMode) _tasks=GetChatModeTasks();
+            else _tasks = GetStandardModeTasks();
 
         }
 
@@ -90,60 +91,105 @@ namespace NetworkMonitor.Maui.ViewModels
         {
             try
             {
-                return new List<TaskItem>
-        {
-            new TaskItem
-            {
-                TaskDescription = "Authorize Agent",
-                IsCompleted = _netConfig.AgentUserFlow.IsAuthorized,
-                TaskAction = new Command(async () =>
+                if (_netConfig.IsChatMode)
                 {
-                    try
-                    {
-                        if (!_isPolling)
-                        {
-                            _isPolling = true;
-                            await ExecuteAuthorizeAsync();
-                            _isPolling = false;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"Error executing authorize action: {ex}");
-                        _isPolling = false; // Ensure we reset the flag even if there's an error
-                    }
-                })
-            },
-            new TaskItem
-            {
-                TaskDescription = "Login Free Network Monitor",
-                IsCompleted = _netConfig.AgentUserFlow.IsLoggedInWebsite,
-                TaskAction = new Command(async () => await ExecuteLoginAsync())
-            },
-            new TaskItem
-            {
-                TaskDescription = "Scan for Hosts",
-                IsCompleted = _netConfig.AgentUserFlow.IsHostsAdded,
-                TaskAction = new Command(async () => await ExecuteScanHostsAsync())
-            }
-        };
+                    return GetChatModeTasks();
+                }
+                else
+                {
+                    return GetStandardModeTasks();
+                }
             }
             catch (Exception e)
             {
                 _logger.LogError($"Error in SetupTasks : {e.Message}");
-                // Return fallback task list on error
                 return new List<TaskItem>
-                     {
+        {
             new TaskItem
             {
                 TaskDescription = $"Failed to setup tasks : {e.Message}",
                 IsCompleted = false,
-                TaskAction = null // No action for fallback tasks
+                TaskAction = null
             }
         };
             }
         }
 
+        private List<TaskItem> GetStandardModeTasks()
+        {
+            return new List<TaskItem>
+    {
+        new TaskItem
+        {
+            TaskDescription = "Authorize Agent",
+            IsCompleted = _netConfig.AgentUserFlow.IsAuthorized,
+            TaskAction = new Command(async () =>
+            {
+                try
+                {
+                    if (!_isPolling)
+                    {
+                        _isPolling = true;
+                        await ExecuteAuthorizeAsync();
+                        _isPolling = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error executing authorize action: {ex}");
+                    _isPolling = false;
+                }
+            })
+        },
+        new TaskItem
+        {
+            TaskDescription = "Login Free Network Monitor",
+            IsCompleted = _netConfig.AgentUserFlow.IsLoggedInWebsite,
+            TaskAction = new Command(async () => await ExecuteLoginAsync())
+        },
+        new TaskItem
+        {
+            TaskDescription = "Scan for Hosts",
+            IsCompleted = _netConfig.AgentUserFlow.IsHostsAdded,
+            TaskAction = new Command(async () => await ExecuteScanHostsAsync())
+        }
+    };
+        }
+
+        private List<TaskItem> GetChatModeTasks()
+        {
+            return new List<TaskItem>
+    {
+        new TaskItem
+        {
+            TaskDescription = "Authorize Agent",
+            IsCompleted = _netConfig.AgentUserFlow.IsAuthorized,
+            TaskAction = new Command(async () =>
+            {
+                try
+                {
+                    if (!_isPolling)
+                    {
+                        _isPolling = true;
+                        await ExecuteAuthorizeAsync();
+                        _isPolling = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error executing authorize action: {ex}");
+                    _isPolling = false;
+                }
+            })
+        },
+        new TaskItem
+        {
+            TaskDescription = "Open Network Monitor Assistant",
+            IsCompleted =_netConfig.AgentUserFlow.IsChatOpened,
+            TaskAction = new Command(async () => await ExecuteOpenAssistantAsync())
+        }
+    };
+        }
 
 
         public async Task<bool> SetServiceStartedAsync(bool value)
@@ -223,6 +269,10 @@ namespace NetworkMonitor.Maui.ViewModels
                         case nameof(AgentUserFlow.IsHostsAdded):
                             UpdateTaskCompletion("Scan for Hosts", _netConfig.AgentUserFlow.IsHostsAdded);
                             break;
+                        case nameof(AgentUserFlow.IsChatOpened):
+                            UpdateTaskCompletion("Network Monitor Assistant", _netConfig.AgentUserFlow.IsChatOpened);
+                            break;
+                            
                     }
                 });
             }
@@ -306,7 +356,19 @@ namespace NetworkMonitor.Maui.ViewModels
                 _logger.LogError("Navigation URL is not available");
             }
         }
-
+        private async Task ExecuteOpenAssistantAsync()
+        {
+           var result = await OpenAssistantAsync();
+            if (result.Success && !string.IsNullOrWhiteSpace(result.Message))
+            {
+                NavigateRequested?.Invoke(this, result.Message);
+            }
+            else
+            {
+                ShowAlertRequested?.Invoke(this, ("Error", "Navigation URL is not available."));
+                _logger.LogError("Navigation URL is not available");
+            }
+        }
         private async Task PollForTokenInBackgroundAsync()
         {
             _isPolling = true;
@@ -362,12 +424,22 @@ namespace NetworkMonitor.Maui.ViewModels
 
         public async Task<ResultObj> ScanHostsAsync()
         {
-            string pathStr="//Scan";
+            string pathStr = "//Scan";
 # if Android
 pathStr="Scan";
 # endif
             // Return the navigation route
             return new ResultObj { Success = true, Message = pathStr };
+        }
+
+        private async Task<ResultObj> OpenAssistantAsync()
+        {
+            string pathStr = "//Chat";
+#if Android
+    pathStr = "Chat";
+#endif
+            return new ResultObj { Success = true, Message = pathStr };
+
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -402,7 +474,7 @@ pathStr="Scan";
     {
         private bool _isCompleted;
         public string TaskDescription { get; set; } = "";
-         private IColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+        private IColorResource ColorResource = ServiceInitializer.RootProvider.ColorResource;
 
         public string ButtonText => _isCompleted ? $"{TaskDescription ?? "Task"} (Completed)" : TaskDescription ?? "Task";
 
@@ -461,27 +533,28 @@ pathStr="Scan";
         {
             get
             {
-                 Color color = Colors.Green;
+                Color color = Colors.Green;
                 try
                 {
                     if (_isCompleted)
                     {
                         color = ColorResource.GetResourceColor("Primary");
                     }
-                    else { 
-                          if (ColorResource.GetRequestedTheme() == AppTheme.Dark)
+                    else
+                    {
+                        if (ColorResource.GetRequestedTheme() == AppTheme.Dark)
                         {
-                           color = Colors.White;
+                            color = Colors.White;
                         }
                         else
                         {
-                          
-                             color = Colors.Black;  
+
+                            color = Colors.Black;
                         }
                     }
-                   
+
                 }
-                catch {}
+                catch { }
                 return color;
             }
         }
