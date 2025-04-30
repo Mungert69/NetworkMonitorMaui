@@ -184,7 +184,7 @@ namespace NetworkMonitor.Maui.ViewModels
         },
         new TaskItem
         {
-            TaskDescription = "Open Network Monitor Assistant",
+            TaskDescription = "Open Free Network Monitor Assistant",
             IsCompleted =_netConfig.AgentUserFlow.IsChatOpened,
             TaskAction = new Command(async () => await ExecuteOpenAssistantAsync())
         }
