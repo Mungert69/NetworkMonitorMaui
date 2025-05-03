@@ -182,6 +182,12 @@ namespace NetworkMonitor.Maui.ViewModels
                 }
             })
         },
+         new TaskItem
+        {
+            TaskDescription = "Login Free Network Monitor",
+            IsCompleted = _netConfig.AgentUserFlow.IsLoggedInWebsite,
+            TaskAction = new Command(async () => await ExecuteLoginAsync())
+        },
         new TaskItem
         {
             TaskDescription = "Open Free Network Monitor Assistant",
