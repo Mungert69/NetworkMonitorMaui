@@ -419,7 +419,7 @@ namespace NetworkMonitor.Maui.ViewModels
         public async Task<ResultObj> OpenLoginWebsiteAsync()
         {
             // Just return a successful result along with the URL
-            return new ResultObj { Success = true, Message = "https://freenetworkmonitor.click/dashboard" };
+            return new ResultObj { Success = true, Message = $"{AppConstants.FrontendUrl}/dashboard" };
         }
 
         public async Task<ResultObj> ScanHostsAsync()
