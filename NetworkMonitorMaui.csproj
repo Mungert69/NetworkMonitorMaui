@@ -35,6 +35,9 @@
          <ProjectReference Include="..\NetworkMonitor\NetworkMonitor-Maui.csproj" />
                 <ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui.csproj" />
         </ItemGroup>
+        <ItemGroup>
+          <PackageReference Update="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.60" />
+        </ItemGroup>
 	
 </Project>
 
