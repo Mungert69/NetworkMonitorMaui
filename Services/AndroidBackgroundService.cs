@@ -48,7 +48,7 @@ namespace NetworkMonitor.Maui.Services
     private int messageId=0;
     private string _channelName = "FreeNetworkMonitor";
     private string _channelId="fre_mon_channel";
-    private string _channelDescription="Free Network Monitor Agent notification channel";
+    private string _channelDescription="Quantum Network Monitor Agent notification channel";
     private   bool _channelInitialized = false;
            
 

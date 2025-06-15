@@ -143,7 +143,7 @@ namespace NetworkMonitor.Maui.ViewModels
         },
         new TaskItem
         {
-            TaskDescription = "Login Free Network Monitor",
+            TaskDescription = "Login Quantum Network Monitor",
             IsCompleted = _netConfig.AgentUserFlow.IsLoggedInWebsite,
             TaskAction = new Command(async () => await ExecuteLoginAsync())
         },
@@ -184,13 +184,13 @@ namespace NetworkMonitor.Maui.ViewModels
         },
          new TaskItem
         {
-            TaskDescription = "Login Free Network Monitor",
+            TaskDescription = "Login Quantum Network Monitor",
             IsCompleted = _netConfig.AgentUserFlow.IsLoggedInWebsite,
             TaskAction = new Command(async () => await ExecuteLoginAsync())
         },
         new TaskItem
         {
-            TaskDescription = "Open Free Network Monitor Assistant",
+            TaskDescription = "Open Quantum Network Monitor Assistant",
             IsCompleted =_netConfig.AgentUserFlow.IsChatOpened,
             TaskAction = new Command(async () => await ExecuteOpenAssistantAsync())
         }
@@ -270,7 +270,7 @@ namespace NetworkMonitor.Maui.ViewModels
                             UpdateTaskCompletion("Authorize Agent", _netConfig.AgentUserFlow.IsAuthorized);
                             break;
                         case nameof(AgentUserFlow.IsLoggedInWebsite):
-                            UpdateTaskCompletion("Login Free Network Monitor", _netConfig.AgentUserFlow.IsLoggedInWebsite);
+                            UpdateTaskCompletion("Login Quantum Network Monitor", _netConfig.AgentUserFlow.IsLoggedInWebsite);
                             break;
                         case nameof(AgentUserFlow.IsHostsAdded):
                             UpdateTaskCompletion("Scan for Hosts", _netConfig.AgentUserFlow.IsHostsAdded);
