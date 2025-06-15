@@ -32,7 +32,6 @@
 
         </ItemGroup>
         <ItemGroup>
-         <ProjectReference Include="..\NetworkMonitorLib\NetworkMonitor-Maui.csproj" />
                 <ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui.csproj" />
         </ItemGroup>
         <ItemGroup>
