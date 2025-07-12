@@ -50,6 +50,7 @@ namespace NetworkMonitor.Maui.Services
     private string _channelId="fre_mon_channel";
     private string _channelDescription="Quantum Network Monitor Agent notification channel";
     private   bool _channelInitialized = false;
+    private ILaunchHelper? _launchHelper;
            
 
         public AndroidBackgroundService()
@@ -75,13 +76,13 @@ namespace NetworkMonitor.Maui.Services
             _processorStates = _rootProvider.ServiceProvider.GetRequiredService<LocalProcessorStates>();
             _cmdProcessorProvider = _rootProvider.ServiceProvider.GetRequiredService<ICmdProcessorProvider>();
             _platformService = _rootProvider.ServiceProvider.GetRequiredService<IPlatformService>();
-              
+                _launchHelper = _rootProvider.ServiceProvider.GetRequiredService<ILaunchHelper>();
         }
         private async Task StartAsync()
         {
             try
             {
-                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider);
+                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider,launchHelper);
                 var result = await _backgroundService.Start();
                 _platformService.OnUpdateServiceState(result, true);
 

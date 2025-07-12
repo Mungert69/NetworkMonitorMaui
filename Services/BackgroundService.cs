@@ -30,8 +30,9 @@ namespace NetworkMonitor.Maui.Services
         private IMonitorPingInfoView _monitorPingInfoView;
         private LocalProcessorStates _processorStates;
         private ICmdProcessorProvider _cmdProcessorProvider;
+        private ILaunchHelper? _launchHelper;
         private bool _isRunning = false;
-        public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider)
+        public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider, ILaunchHelper launchHelper)
         {
             _logger = logger;
             _netConfig = netConfig;
@@ -41,6 +42,7 @@ namespace NetworkMonitor.Maui.Services
             _monitorPingInfoView = monitorPingInfoView;
             _processorStates = processorStates;
             _cmdProcessorProvider = cmdProcessorProvider;
+            _launchHelper = launchHelper;
 
         }
 
@@ -59,7 +61,7 @@ namespace NetworkMonitor.Maui.Services
                     return result;
                 }
                 var resultCmdProcessorFactory = await _cmdProcessorProvider.Setup();
-                var _connectFactory = new NetworkMonitor.Connection.ConnectFactory(_loggerFactory.CreateLogger<ConnectFactory>(), netConfig: _netConfig, _cmdProcessorProvider);
+                var _connectFactory = new NetworkMonitor.Connection.ConnectFactory(_loggerFactory.CreateLogger<ConnectFactory>(), netConfig: _netConfig, _cmdProcessorProvider,_launchHelper);
 # if Android 
 
 # else
