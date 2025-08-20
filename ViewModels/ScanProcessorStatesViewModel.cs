@@ -55,7 +55,7 @@ namespace NetworkMonitor.Maui.ViewModels
 
         }
 
-        public List<MonitorIP> SelectedDevices => _cmdProcessorStates.SelectedDevices.ToList();
+        public List<MonitorIP> SelectedDevices => _cmdProcessorStates.SelectedDevices?.ToList() ?? new List<MonitorIP>();
         public void LoadNetworkInterfaces()
         {
             if (_cmdProcessorStates != null)

@@ -9,7 +9,7 @@ public interface IDialogService
 
 public class DialogService : IDialogService
 {
-    private Page? MainPage => Application.Current?.MainPage;
+    private Page? MainPage => Application.Current?.Windows[0].Page;
 
     public async Task DisplayAlert(string title, string message, string cancel)
     {

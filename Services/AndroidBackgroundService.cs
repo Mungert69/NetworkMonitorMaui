@@ -23,42 +23,39 @@ namespace NetworkMonitor.Maui.Services
     [Android.App.Service(ForegroundServiceType = global::Android.Content.PM.ForegroundService.TypeConnectedDevice)]
     public class AndroidBackgroundService : Android.App.Service
     {
-        private CancellationTokenSource _cts;
+        private CancellationTokenSource _cts = new();
         // This is any integer value unique to the application.
         public const int SERVICE_RUNNING_NOTIFICATION_ID = 10000;
-        private ILogger _logger;
-        private NetConnectConfig _netConfig;
-        private ILoggerFactory _loggerFactory;
-        private IRabbitRepo _rabbitRepo;
-        private IBackgroundService _backgroundService;
-        private IMonitorPingInfoView _monitorPingInfoView;
-        private LocalProcessorStates _processorStates;
-        //private ILocalCmdProcessorStates _scanProcessorStates;
-        private ICmdProcessorProvider _cmdProcessorProvider;
+        private ILogger _logger = default!;
+        private NetConnectConfig _netConfig = default!;
+        private ILoggerFactory _loggerFactory = default!;
+        private IRabbitRepo _rabbitRepo = default!;
+        private IBackgroundService _backgroundService = default!;
+        private IMonitorPingInfoView _monitorPingInfoView = default!;
+        private LocalProcessorStates _processorStates = default!;
+        private ICmdProcessorProvider _cmdProcessorProvider = default!;
+        private IPlatformService _platformService = default!;
+        private IFileRepo _fileRepo = default!;
+        private IRootNamespaceProvider _rootProvider = default!;
+        private NotificationManagerCompat _compatManager = default!;
+        private int messageId = 0;
+        private string _channelName = "FreeNetworkMonitor";
+        private string _channelId = "fre_mon_channel";
+        private string _channelDescription = "Quantum Network Monitor Agent notification channel";
+        private bool _channelInitialized = false;
+        private ILaunchHelper _launchHelper = default!;
 
-        private IPlatformService _platformService;
-
-        private IFileRepo _fileRepo;
-        private IRootNamespaceProvider _rootProvider;
         public const string ServiceBroadcastAction = "com.networkmonitor.service.STATUS";
         public const string ServiceStatusExtra = "ServiceStatus";
         public const string ServiceMessageExtra = "ServiceMessage";
 
-    private NotificationManagerCompat _compatManager;
-    private int messageId=0;
-    private string _channelName = "FreeNetworkMonitor";
-    private string _channelId="fre_mon_channel";
-    private string _channelDescription="Quantum Network Monitor Agent notification channel";
-    private   bool _channelInitialized = false;
-    private ILaunchHelper _launchHelper;
-           
 
         public AndroidBackgroundService()
         {
-            _rootProvider = ServiceInitializer.RootProvider;      
+            _rootProvider = ServiceInitializer.RootProvider!;
         }
 
-        public override IBinder OnBind(Intent intent)
+        public override IBinder? OnBind(Intent? intent)
         {
             return null;
         }
@@ -112,10 +109,14 @@ namespace NetworkMonitor.Maui.Services
         {
             var viewAppIntent = new Intent(this, _rootProvider.MainActivity);
             viewAppIntent.AddCategory(Intent.CategoryLauncher);
-            return PendingIntent.GetActivity(this, 0, viewAppIntent, 0);
+            // PendingIntent.GetActivity can return null, so check and throw if needed
+            var pendingIntent = PendingIntent.GetActivity(this, 0, viewAppIntent, 0);
+            if (pendingIntent == null)
+                throw new InvalidOperationException("Failed to create PendingIntent.");
+            return pendingIntent;
         }
 
-        public override StartCommandResult OnStartCommand(Intent intent, StartCommandFlags flags, int startId)
+        public override StartCommandResult OnStartCommand(Intent? intent, StartCommandFlags flags, int startId)
         {
             if (_cts.IsCancellationRequested)
             {
@@ -127,8 +128,7 @@ namespace NetworkMonitor.Maui.Services
                 try
                 {
                     _logger.LogInformation($" SERVICE : stopping");
-                    // API 33+ uses StopForeground with flags, older uses bool
-                    if ((int)Build.VERSION.SdkInt >= 33)
+                    if ((int)Build.VERSION.SdkInt >= 24)
                     {
                         StopForeground(Android.App.StopForegroundFlags.Remove);
                     }
@@ -169,13 +169,8 @@ namespace NetworkMonitor.Maui.Services
                 Notification notification = builder.Build();
                 _logger.LogInformation($" SERVICE : created notification");
 
-                // API 33+ uses ForegroundService.TypeConnectedDevice, API 29+ uses StartForeground with type, older uses without type
-                if ((int)Build.VERSION.SdkInt >= 33)
-                {
-                    StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification,
-                        Android.Content.PM.ForegroundService.TypeConnectedDevice);
-                }
-                else if ((int)Build.VERSION.SdkInt >= 29)
+                // Only call StartForeground with ForegroundService.TypeConnectedDevice if API >= 29
+                if ((int)Build.VERSION.SdkInt >= 29)
                 {
                     StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification,
                         Android.Content.PM.ForegroundService.TypeConnectedDevice);
@@ -209,10 +204,13 @@ private void CreateNotificationChannel()
         {
             Description = _channelDescription
         };
-        NotificationManager manager = (NotificationManager)Platform.AppContext.GetSystemService(Context.NotificationService);
-        manager.CreateNotificationChannel(channel);
-        _channelInitialized = true;
-        _logger.LogInformation($" SERVICE : created notification channel.");
+        var managerObj = Platform.AppContext.GetSystemService(Context.NotificationService);
+        if (managerObj is NotificationManager manager)
+        {
+            manager.CreateNotificationChannel(channel);
+            _channelInitialized = true;
+            _logger.LogInformation($" SERVICE : created notification channel.");
+        }
     }
 }
 

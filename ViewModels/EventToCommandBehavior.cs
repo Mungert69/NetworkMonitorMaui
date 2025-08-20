@@ -25,7 +25,7 @@ namespace NetworkMonitor.Maui.ViewModels
             bindable.Toggled -= OnToggled;
         }
 
-        private void OnToggled(object sender, ToggledEventArgs e)
+        private void OnToggled(object? sender, ToggledEventArgs e)
         {
             if (Command?.CanExecute(e.Value) == true)
             {

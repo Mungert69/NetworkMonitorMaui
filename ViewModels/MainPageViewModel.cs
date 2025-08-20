@@ -474,6 +474,12 @@ pathStr="Scan";
                 return false;
             }
         }
+
+        public async Task SomeMethod()
+        {
+            await Task.CompletedTask;
+            // ...existing code...
+        }
     }
 
     public class TaskItem : INotifyPropertyChanged
