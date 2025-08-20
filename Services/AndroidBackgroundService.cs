@@ -76,7 +76,7 @@ namespace NetworkMonitor.Maui.Services
             _processorStates = _rootProvider.ServiceProvider.GetRequiredService<LocalProcessorStates>();
             _cmdProcessorProvider = _rootProvider.ServiceProvider.GetRequiredService<ICmdProcessorProvider>();
             _platformService = _rootProvider.ServiceProvider.GetRequiredService<IPlatformService>();
-                _launchHelper = _rootProvider.ServiceProvider.GetRequiredService<ILaunchHelper>();
+            _launchHelper = _rootProvider.ServiceProvider.GetRequiredService<ILaunchHelper>();
         }
         private async Task StartAsync()
         {

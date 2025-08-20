@@ -116,17 +116,7 @@ namespace NetworkMonitor.Maui.Services
                 _logger.LogError("Error during shutting down MonitorPingProcessor: " + e.ToString());
                 result.Success = false;
             }
-            try
-            {
-                _logger.LogInformation("Shutting down RabbitRepo.");
-                await _rabbitRepo.ShutdownRepo();
-                result.Message += " Success : Shutdown RabbitRepo.";
-            }
-            catch (Exception e)
-            {
-                _logger.LogError("Error during shutting down RabbitRepo: " + e.ToString());
-                result.Success = false;
-            }
+           
             _isRunning = result.Success;
 
             return result;
