@@ -129,7 +129,7 @@ namespace NetworkMonitor.Maui.Services
                if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.M))
                      {
 #pragma warning disable CA1416
-var powerService=Context.PowerService;
+                    var powerService=Context.PowerService;
                     if (powerService!=null) {
                         var powerManager = (PowerManager?)Platform.CurrentActivity?.GetSystemService(powerService);
                     if (powerManager!=null && !powerManager.IsIgnoringBatteryOptimizations(Platform.CurrentActivity?.PackageName))
@@ -182,6 +182,7 @@ var powerService=Context.PowerService;
         _serviceOperationCompletionSource.SetException(ex);
         return Task.FromException(ex);
     }
+        
         public override Task StopBackgroundService()
         {
             _serviceOperationCompletionSource = new TaskCompletionSource<bool>();
