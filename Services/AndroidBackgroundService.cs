@@ -50,7 +50,7 @@ namespace NetworkMonitor.Maui.Services
     private string _channelId="fre_mon_channel";
     private string _channelDescription="Quantum Network Monitor Agent notification channel";
     private   bool _channelInitialized = false;
-    private ILaunchHelper? _launchHelper;
+    private ILaunchHelper _launchHelper;
            
 
         public AndroidBackgroundService()
@@ -62,6 +62,7 @@ namespace NetworkMonitor.Maui.Services
         {
             return null;
         }
+
         public override void OnCreate()
         {
             base.OnCreate();
@@ -125,11 +126,19 @@ namespace NetworkMonitor.Maui.Services
             {
                 try
                 {
-                    _logger.LogInformation($" SERVICE : stopping");              
-                    StopForeground(true);
-                    _ = StopAsync();          
+                    _logger.LogInformation($" SERVICE : stopping");
+                    // API 33+ uses StopForeground with flags, older uses bool
+                    if ((int)Build.VERSION.SdkInt >= 33)
+                    {
+                        StopForeground(Android.App.StopForegroundFlags.Remove);
+                    }
+                    else
+                    {
+                        StopForeground(true);
+                    }
+                    _ = StopAsync();
                     _logger.LogInformation($" SERVICE : StartCommand Stop Completed");
-            
+
                     return StartCommandResult.Sticky;
                 }
                 catch (Exception e)
@@ -139,7 +148,7 @@ namespace NetworkMonitor.Maui.Services
                     return StartCommandResult.Sticky;
                 }
             }
-        
+
             try
             {
                 int logoId = _rootProvider.GetDrawable("logo");
@@ -149,35 +158,40 @@ namespace NetworkMonitor.Maui.Services
                 {
                     CreateNotificationChannel();
                 }
-               
+
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(this, _channelId)
-                .SetContentTitle("Network Monitor Agent")
-                .SetContentText("Service Running...")
-                .SetLargeIcon(BitmapFactory.DecodeResource(Platform.AppContext.Resources, logoId))
-                .SetSmallIcon(logoId)
-               .SetOngoing(true);
-        
+                    .SetContentTitle("Network Monitor Agent")
+                    .SetContentText("Service Running...")
+                    .SetLargeIcon(BitmapFactory.DecodeResource(Platform.AppContext.Resources, logoId))
+                    .SetSmallIcon(logoId)
+                    .SetOngoing(true);
+
                 Notification notification = builder.Build();
-                  _logger.LogInformation($" SERVICE : created notification");
-               
-                                       
-                if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.Tiramisu))
+                _logger.LogInformation($" SERVICE : created notification");
+
+                // API 33+ uses ForegroundService.TypeConnectedDevice, API 29+ uses StartForeground with type, older uses without type
+                if ((int)Build.VERSION.SdkInt >= 33)
                 {
                     StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification,
-                    Android.Content.PM.ForegroundService.TypeConnectedDevice);        
+                        Android.Content.PM.ForegroundService.TypeConnectedDevice);
+                }
+                else if ((int)Build.VERSION.SdkInt >= 29)
+                {
+                    StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification,
+                        Android.Content.PM.ForegroundService.TypeConnectedDevice);
                 }
                 else
                 {
-                    StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification); 
+                    StartForeground(SERVICE_RUNNING_NOTIFICATION_ID, notification);
                 }
-               
+
                 _ = StartAsync();
-                   
+
             }
             catch (Exception e)
             {
                 var result = new ResultObj() { Message = $" Error : Failed to Start service . Error was : {e.Message}", Success = false };
-                result.Success=false;
+                result.Success = false;
                 _platformService.OnUpdateServiceState(result, true);
             }
             _logger.LogInformation($" SERVICE : StartCommand Start completed");
@@ -185,26 +199,22 @@ namespace NetworkMonitor.Maui.Services
             return StartCommandResult.Sticky;
         }
 
-       private  void  CreateNotificationChannel()
+private void CreateNotificationChannel()
+{
+    // Only on API 26+ (Oreo)
+    if ((int)Build.VERSION.SdkInt >= 26)
     {
-        // Create the notification channel, but only on API 26+.
-        if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.O))
+        var channelNameJava = new Java.Lang.String(_channelName);
+        var channel = new NotificationChannel(_channelId, channelNameJava, NotificationImportance.Default)
         {
-            var channelNameJava = new Java.Lang.String(_channelName);
-            var channel = new NotificationChannel(_channelId, channelNameJava, NotificationImportance.Default)
-            {
-                Description = _channelDescription
-            };
-            // Register the channel
-            NotificationManager manager = (NotificationManager)Platform.AppContext.GetSystemService(Context.NotificationService);
-            manager.CreateNotificationChannel(channel);
-            _channelInitialized=true;
-             _logger.LogInformation($" SERVICE : created notification channel.");
-
-
-        }
-     
+            Description = _channelDescription
+        };
+        NotificationManager manager = (NotificationManager)Platform.AppContext.GetSystemService(Context.NotificationService);
+        manager.CreateNotificationChannel(channel);
+        _channelInitialized = true;
+        _logger.LogInformation($" SERVICE : created notification channel.");
     }
+}
 
         public override void OnDestroy()
         {

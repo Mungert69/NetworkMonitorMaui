@@ -162,26 +162,26 @@ var powerService=Context.PowerService;
 
             try
             {
-                 Android.Content.Intent? intent = new Android.Content.Intent(Android.App.Application.Context,typeof(AndroidBackgroundService));
-                if (intent!=null && Android.App.Application.Context!=null){
-                if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.O))            
-                {
-                        Android.App.Application.Context.StartForegroundService(intent);
-                }
-                else
-                {
-                          Android.App.Application.Context.StartService(intent);
-                }
-                }
-                return _serviceOperationCompletionSource.Task;
-            }
-            catch (Exception ex)
+        Android.Content.Intent? intent = new Android.Content.Intent(Android.App.Application.Context, typeof(AndroidBackgroundService));
+        if (intent != null && Android.App.Application.Context != null)
+        {
+            if ((int)Build.VERSION.SdkInt >= 26) // API 26+ (Oreo)
             {
-                _logger.LogError(ex, "Error starting background service in AndroidPlatformService");
-                _serviceOperationCompletionSource.SetException(ex);
-                return Task.FromException(ex);
+                Android.App.Application.Context.StartForegroundService(intent);
+            }
+            else
+            {
+                Android.App.Application.Context.StartService(intent);
             }
         }
+        return _serviceOperationCompletionSource.Task;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error starting background service in AndroidPlatformService");
+        _serviceOperationCompletionSource.SetException(ex);
+        return Task.FromException(ex);
+    }
         public override Task StopBackgroundService()
         {
             _serviceOperationCompletionSource = new TaskCompletionSource<bool>();
