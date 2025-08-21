@@ -1,6 +1,6 @@
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Layouts;
-using NetworkMonitor.Objects; 
+using NetworkMonitor.Objects;
 using NetworkMonitor.Maui.Services;
 
 namespace NetworkMonitor.Maui.Controls
