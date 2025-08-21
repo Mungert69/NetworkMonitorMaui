@@ -34,13 +34,13 @@ namespace NetworkMonitor.Maui.Services
                 }
             }
         }
-        /* protected void OnServiceStateChanged()
-         {
-             ServiceStateChanged?.Invoke(this, EventArgs.Empty);
-         }*/
+       /* protected void OnServiceStateChanged()
+        {
+            ServiceStateChanged?.Invoke(this, EventArgs.Empty);
+        }*/
 
 
-        public PlatformService(ILogger<PlatformService> logger)
+        public PlatformService( ILogger<PlatformService> logger)
         {
             //_dialogService = dialogService;
 
@@ -85,12 +85,12 @@ namespace NetworkMonitor.Maui.Services
         {
             return Task.CompletedTask;
         }
-        public virtual bool RequestPermissionsAsync()
+          public virtual bool RequestPermissionsAsync()
         {
             return true;
         }
 
-        public virtual void OnUpdateServiceState(ResultObj result, bool state) { }
+       public virtual void OnUpdateServiceState(ResultObj result, bool state){}
         public string ServiceMessage { get => _serviceMessage; set => _serviceMessage = value; }
         public bool DisableAgentOnServiceShutdown { get => _disableAgentOnServiceShutdown; set => _disableAgentOnServiceShutdown = value; }
     }
@@ -122,14 +122,14 @@ namespace NetworkMonitor.Maui.Services
             Android.App.Application.Context.RegisterReceiver(_serviceStatusReceiver, filter);
         }
 
-      public override bool RequestPermissionsAsync()
+        public override bool RequestPermissionsAsync()
         {
             try
             {         
-               if (OperatingSystem.IsAndroidVersionAtLeast((int)BuildVersionCodes.M))
-                     {
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
+                {
 #pragma warning disable CA1416
-                    var powerService=Context.PowerService;
+var powerService=Context.PowerService;
                     if (powerService!=null) {
                         var powerManager = (PowerManager?)Platform.CurrentActivity?.GetSystemService(powerService);
                     if (powerManager!=null && !powerManager.IsIgnoringBatteryOptimizations(Platform.CurrentActivity?.PackageName))
@@ -162,18 +162,22 @@ namespace NetworkMonitor.Maui.Services
 
             try
             {
-                Android.Content.Intent? intent = new Android.Content.Intent(Android.App.Application.Context, typeof(AndroidBackgroundService));
-                if (intent != null && Android.App.Application.Context != null)
+                 Android.Content.Intent? intent = new Android.Content.Intent(Android.App.Application.Context,typeof(AndroidBackgroundService));
+                if (intent!=null && Android.App.Application.Context!=null){
+                     if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
                 {
-                    if ((int)Build.VERSION.SdkInt >= 26) // API 26+ (Oreo)
-                    {
                         Android.App.Application.Context.StartForegroundService(intent);
-                    }
-                    else
-                    {
-                        Android.App.Application.Context.StartService(intent);
-                    }
                 }
+                else{
+  
+                          Android.App.Application.Context.StartService(intent);
+                }
+                }
+                
+               
+                //_serviceMessage = " Android Service started successfully.";
+                //_isServiceStarted=true;
+
                 return _serviceOperationCompletionSource.Task;
             }
             catch (Exception ex)
@@ -183,7 +187,6 @@ namespace NetworkMonitor.Maui.Services
                 return Task.FromException(ex);
             }
         }
-
         public override Task StopBackgroundService()
         {
             _serviceOperationCompletionSource = new TaskCompletionSource<bool>();
@@ -208,22 +211,20 @@ namespace NetworkMonitor.Maui.Services
             }
         }
 
-        public  override void OnUpdateServiceState(ResultObj result, bool isStartCall)
+        public  override void OnUpdateServiceState(ResultObj result, bool state)
         {
                  try
             {
+                 IsServiceStarted = state;
                      // Update PlatformService properties
                     if (result.Success)
                     {
                      
                      
-                        if (isStartCall) {ServiceMessage = " Agent enabled. Complete tasks below to start monitoring...";
-                          IsServiceStarted = true;
-                
-                         } else
+                        if (IsServiceStarted) ServiceMessage = " Agent enabled. Complete tasks below to start monitoring...";
+                        else
                         {
                             ServiceMessage = " Agent disabled. You can now close the App.";
-                            IsServiceStarted=false;
                         }
                         _logger.LogInformation(result.Message+ServiceMessage);
                         _serviceOperationCompletionSource?.SetResult(true);
@@ -232,7 +233,7 @@ namespace NetworkMonitor.Maui.Services
                     else
                     {
                         var stateStr = "start";
-                        if (!isStartCall) stateStr = "stop";
+                        if (IsServiceStarted) stateStr = "stop";
 
                         ServiceMessage = $" Agent service failed to {stateStr}. Service message was : {result.Message}";
                          _logger.LogError(result.Message+ServiceMessage);
@@ -249,7 +250,6 @@ namespace NetworkMonitor.Maui.Services
             catch (Exception e)
             {
                 _logger.LogError($" Error : failed to run OnUpdateServiceState  . Error was : {e.Message}");
-                  _serviceOperationCompletionSource?.SetResult(false);
             }
     
         }
@@ -314,7 +314,7 @@ namespace NetworkMonitor.Maui.Services
     {
         private IBackgroundService _backgroundService;
 
-        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger) : base(logger)
+        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger) : base( logger)
         {
             _backgroundService = backgroundService;
         }
@@ -371,7 +371,7 @@ namespace NetworkMonitor.Maui.Services
                 if (result.Success) _serviceMessage = " Agent disabled. You can now close the App.";
                 else _serviceMessage = $" Agent service failed to stop. Service message was : {result.Message}";
                 if (result.Success) _isServiceStarted = false;
-                // OnServiceStateChanged();
+               // OnServiceStateChanged();
             }
             catch (Exception ex)
             {
