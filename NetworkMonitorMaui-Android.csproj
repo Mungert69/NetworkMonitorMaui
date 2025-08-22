@@ -9,7 +9,7 @@
                 <!-- Display name -->
                 <ApplicationDisplayVersion>0.0.2</ApplicationDisplayVersion>
                 <ApplicationVersion>2</ApplicationVersion>
-                 <DefineConstants>ANDROID</DefineConstants>
+                <DefineConstants>ANDROID</DefineConstants>
                 <AndroidSdkDirectory>/usr/lib/android-sdk</AndroidSdkDirectory>
                 <!--
   <NoWarn>CS8600;CS8602;CS8603;CS8604;CS8618;CS0067;CS0414;CA1416;CA1422</NoWarn>
@@ -23,9 +23,9 @@
   This keeps build output clean but may hide potential issues.
 -->
                 <NoWarn>CS8600;CS8602;CS8603;CS8604;CS8618;CS0067;CS0414;CA1416;CA1422</NoWarn>
-        </PropertyGroup> 
+        </PropertyGroup>
 
-     
+
         <ItemGroup>
                 <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
                 <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
@@ -36,17 +36,17 @@
                 <PackageReference Include="Microsoft.Maui.Core" Version="9.0.90" />
                 <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.90" />
                 <PackageReference Include="Microsoft.Maui.Graphics" Version="9.0.90" />
-                      <PackageReference Include="MatBlazor" Version="2.10.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Components" Version="9.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.8" />
-    <PackageReference Include="Microsoft.JSInterop" Version="9.0.8" />
+                <PackageReference Include="MatBlazor" Version="2.10.0" />
+                <PackageReference Include="Microsoft.AspNetCore.Components" Version="9.0.8" />
+                <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
+                <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.8" />
+                <PackageReference Include="Microsoft.JSInterop" Version="9.0.8" />
 
         </ItemGroup>
         <ItemGroup>
                 <ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui-Android.csproj" />
                 <ProjectReference Include="..\NetworkMonitorLib\NetworkMonitor-Maui-Android.csproj" />
         </ItemGroup>
-	
+
 </Project>
 
