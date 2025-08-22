@@ -190,7 +190,7 @@ namespace NetworkMonitor.Maui.ViewModels
         },
         new TaskItem
         {
-            TaskDescription = "Open Quantum Network Monitor Assistant",
+            TaskDescription = "Open Monitor Assistant",
             IsCompleted =_netConfig.AgentUserFlow.IsChatOpened,
             TaskAction = new Command(async () => await ExecuteOpenAssistantAsync())
         }
