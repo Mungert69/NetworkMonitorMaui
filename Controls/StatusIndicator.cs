@@ -1,19 +1,17 @@
 using Microsoft.Maui.Graphics;
-using Microsoft.Maui.Layouts;
-using NetworkMonitor.Objects;
-using NetworkMonitor.Maui.Services;
+using Microsoft.Maui.Controls;
 using System.Threading;
-using System.Timers;
-using Timer = System.Timers.Timer;
+using System.Threading.Tasks;
+using NetworkMonitor.Maui.Services;
+
 namespace NetworkMonitor.Maui.Controls;
 
 public class StatusIndicator : ContentView
 {
-    private BoxView _ripple;
-    private BoxView _circle;
-    private Timer _animationTimer;
-    CancellationTokenSource _animationCts;
-     private IColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+    private readonly BoxView _circle;
+    private readonly BoxView _ripple;
+    private CancellationTokenSource _animationCts;
+    private IColorResource ColorResource = ServiceInitializer.RootProvider.ColorResource;
 
     public static readonly BindableProperty IsUpProperty = BindableProperty.Create(
         nameof(IsUp), typeof(bool), typeof(StatusIndicator), default(bool), propertyChanged: OnIsUpChanged);
@@ -21,14 +19,91 @@ public class StatusIndicator : ContentView
     public bool IsUp
     {
         get => (bool)GetValue(IsUpProperty);
-        set
+        set => SetValue(IsUpProperty, value);
+    }
+
+    public static readonly BindableProperty DiameterPixelsProperty = BindableProperty.Create(
+        nameof(DiameterPixels), typeof(double), typeof(StatusIndicator), 30.0, propertyChanged: OnDiameterChanged);
+
+    public double DiameterPixels
+    {
+        get => (double)GetValue(DiameterPixelsProperty);
+        set => SetValue(DiameterPixelsProperty, value);
+    }
+
+    public static readonly BindableProperty PacketsLostPercentageProperty = BindableProperty.Create(
+        nameof(PacketsLostPercentage), typeof(double), typeof(StatusIndicator), 0.0);
+
+    public double PacketsLostPercentage
+    {
+        get => (double)GetValue(PacketsLostPercentageProperty);
+        set => SetValue(PacketsLostPercentageProperty, value);
+    }
+
+    public static readonly BindableProperty RoundTripTimeAverageProperty = BindableProperty.Create(
+        nameof(RoundTripTimeAverage), typeof(double), typeof(StatusIndicator), 500.0);
+
+    public double RoundTripTimeAverage
+    {
+        get => (double)GetValue(RoundTripTimeAverageProperty);
+        set => SetValue(RoundTripTimeAverageProperty, value);
+    }
+
+    public static readonly BindableProperty IsAnimatedProperty = BindableProperty.Create(
+        nameof(IsAnimated), typeof(bool), typeof(StatusIndicator), true, propertyChanged: OnIsAnimatedChanged);
+
+    public bool IsAnimated
+    {
+        get => (bool)GetValue(IsAnimatedProperty);
+        set => SetValue(IsAnimatedProperty, value);
+    }
+
+    public StatusIndicator()
+    {
+        _circle = new BoxView
         {
-            if (IsUp != value)
-            {
-                SetValue(IsUpProperty, value);
-                // Additional logic if needed
-            }
-        }
+            Color = ColorResource.GetResourceColor("Error"),
+            CornerRadius = 15,
+        };
+
+        _ripple = new BoxView
+        {
+            Color = ColorResource.GetResourceColor("Secondary"),
+            CornerRadius = 15,
+            Opacity = 0,
+        };
+
+        // Wrap in a Grid to give a proper hit area for taps
+        var grid = new Grid
+        {
+            WidthRequest = DiameterPixels,
+            HeightRequest = DiameterPixels
+        };
+        grid.Children.Add(_ripple);
+        grid.Children.Add(_circle);
+
+        Content = grid;
+
+        _animationCts = new CancellationTokenSource();
+
+        // Gesture
+        var tapGesture = new TapGestureRecognizer();
+        tapGesture.Tapped += (s, e) => this.SendTapped();
+        GestureRecognizers.Add(tapGesture);
+    }
+
+    private void SendTapped()
+    {
+        if (Tapped != null)
+            Tapped(this, EventArgs.Empty);
+    }
+
+    public event EventHandler Tapped;
+
+    protected override void OnParentSet()
+    {
+        base.OnParentSet();
+        UpdateVisualState();
     }
 
     private static void OnIsUpChanged(BindableObject bindable, object oldValue, object newValue)
@@ -37,307 +112,112 @@ public class StatusIndicator : ContentView
         control.UpdateVisualState();
     }
 
-
-    public static readonly BindableProperty PacketsLostPercentageProperty = BindableProperty.Create(
-        nameof(PacketsLostPercentage), typeof(double), typeof(StatusIndicator), default(double));
-
-    public double PacketsLostPercentage
-    {
-        get => (double)GetValue(PacketsLostPercentageProperty);
-        set
-        {
-            if (PacketsLostPercentage != value)
-            {
-                SetValue(PacketsLostPercentageProperty, value);
-                // Additional logic if needed
-            }
-        }
-
-    }
-
-    public static readonly BindableProperty RoundTripTimeAverageProperty = BindableProperty.Create(
-       nameof(RoundTripTimeAverage), typeof(double), typeof(StatusIndicator), default(double));
-
-    public double RoundTripTimeAverage
-    {
-        get => (double)GetValue(RoundTripTimeAverageProperty);
-        set
-        {
-            if (RoundTripTimeAverage != value)
-            {
-                SetValue(RoundTripTimeAverageProperty, value);
-                // Additional logic if needed
-            }
-        }
-
-    }
-
-
-    public static readonly BindableProperty DiameterPixelsProperty = BindableProperty.Create(
-          nameof(DiameterPixels), typeof(double), typeof(StatusIndicator), default(double), propertyChanged: OnDiameterPixelsChanged);
-
-    public double DiameterPixels
-    {
-        get => (double)GetValue(DiameterPixelsProperty);
-        set
-        {
-            if (DiameterPixels != value)
-            {
-                SetValue(DiameterPixelsProperty, value);
-                // Additional logic if needed
-            }
-        }
-
-    }
-
-    private static void OnDiameterPixelsChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        var control = (StatusIndicator)bindable;
-
-        control.UpdateIndicatorSize((double)newValue);
-
-    }
-
-
-
-    public static readonly BindableProperty IsAnimatedProperty = BindableProperty.Create(
-    nameof(IsAnimated), typeof(bool), typeof(StatusIndicator), true, propertyChanged: OnIsAnimatedChanged);
-
-    public bool IsAnimated
-    {
-        get => (bool)GetValue(IsAnimatedProperty);
-
-        set
-        {
-            if (IsAnimated != value)
-            {
-                SetValue(IsAnimatedProperty, value);
-                if (value == true)
-                {
-                    _animationCts?.Dispose(); // Dispose the old CTS if it exists
-                    _animationCts = new CancellationTokenSource();
-                    var pulsingTask = StartPulsingAnimation(_animationCts.Token);
-                    var rippleTask = StartRippleAnimation(_animationCts.Token);
-
-                    // Start the timer
-                    _animationTimer.Start();
-                }
-                // Additional logic if needed
-            }
-        }
-    }
-
     private static void OnIsAnimatedChanged(BindableObject bindable, object oldValue, object newValue)
     {
         var control = (StatusIndicator)bindable;
-        control.UpdateAnimationState((bool)newValue);
+        control.UpdateVisualState();
     }
 
-    public StatusIndicator()
+    private static void OnDiameterChanged(BindableObject bindable, object oldValue, object newValue)
     {
-        _circle = new BoxView
+        var control = (StatusIndicator)bindable;
+        double diameter = (double)newValue;
+        control._circle.WidthRequest = diameter;
+        control._circle.HeightRequest = diameter;
+        control._circle.CornerRadius = (float)(diameter / 2);
+
+        control._ripple.WidthRequest = diameter;
+        control._ripple.HeightRequest = diameter;
+        control._ripple.CornerRadius = (float)(diameter / 2);
+
+        if (control.Content is Grid grid)
         {
-            WidthRequest = 30,
-            HeightRequest = 30,
-            CornerRadius = 15,
-            Color = ColorResource.GetResourceColor("Error"),
-            Background =new Microsoft.Maui.Graphics.Color(0, 0, 0, 0)
-        };
+            grid.WidthRequest = diameter;
+            grid.HeightRequest = diameter;
+        }
+    }
 
-        _ripple = new BoxView
+    private void UpdateVisualState()
+    {
+        _circle.Color = IsUp ? ColorResource.GetResourceColor("Primary") : ColorResource.GetResourceColor("Error");
+
+        if (!IsUp || !IsAnimated)
         {
-            WidthRequest = 30,
-            HeightRequest = 30,
-            CornerRadius = 15,
-            Opacity = 0, // Initially invisible
-            Color = ColorResource.GetResourceColor("Secondary"),
-            Background =new Microsoft.Maui.Graphics.Color(0, 0, 0, 0)
-        };
+            StopAnimations();
+        }
+        else
+        {
+            StartAnimations();
+        }
+    }
 
-        // Add the ripple to the layout
-        var layout = new AbsoluteLayout();
-        AbsoluteLayout.SetLayoutBounds(_circle, new Rect(0.5, 0.5, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize));
-        AbsoluteLayout.SetLayoutFlags(_circle, AbsoluteLayoutFlags.PositionProportional);
-        layout.Children.Add(_circle);
-
-        AbsoluteLayout.SetLayoutBounds(_ripple, new Rect(0.5, 0.5, AbsoluteLayout.AutoSize, AbsoluteLayout.AutoSize));
-        AbsoluteLayout.SetLayoutFlags(_ripple, AbsoluteLayoutFlags.PositionProportional);
-        layout.Children.Add(_ripple);
-
-        Content = layout;
+    private void StopAnimations()
+    {
+        _animationCts.Cancel();
+        _circle.CancelAnimations();
+        _ripple.CancelAnimations();
         _animationCts = new CancellationTokenSource();
-        _animationTimer = new Timer(50000); // 1 minute duration
-        _animationTimer.AutoReset = false; // Ensures the timer runs only once
-        _animationTimer.Elapsed += OnAnimationTimerElapsed;
-        _animationTimer.Start();
     }
 
-
-
-    private void UpdateIndicatorSize(double diameter)
+    private void StartAnimations()
     {
-        if (_circle != null)
-        {
-            _circle.WidthRequest = diameter;
-            _circle.HeightRequest = diameter;
-            _circle.CornerRadius = (float)(diameter / 2);
-        }
-
-        if (_ripple != null)
-        {
-            _ripple.WidthRequest = diameter;
-            _ripple.HeightRequest = diameter;
-            _ripple.CornerRadius = (float)(diameter / 2);
-        }
-    }
-    public void UpdateVisualState()
-    {
-
-        // Explicitly stop the animation if IsUp is false
-        if (!IsUp)
-        {
-            _circle.Color = ColorResource.GetResourceColor("Error");
-            _circle.CancelAnimations(); // This stops any ongoing animations
-            _ripple.CancelAnimations();
-        }
-        else
-        {
-            _circle.Color = ColorResource.GetResourceColor("Primary");
-            UpdateAnimationState(IsAnimated); // Control animations based on IsAnimated
-
-        }
-
+        StopAnimations();
+        var token = _animationCts.Token;
+        _ = RunPulseAnimation(token);
+        _ = RunRippleAnimation(token);
     }
 
-    private void UpdateAnimationState(bool isAnimated)
+    private async Task RunPulseAnimation(CancellationToken token)
     {
-        if (isAnimated && IsUp)
+        while (!token.IsCancellationRequested && IsUp && IsAnimated)
         {
-            _animationCts?.Dispose(); // Dispose the old CTS if it exists
-            _animationCts = new CancellationTokenSource();
-            var pulsingTask = StartPulsingAnimation(_animationCts.Token);
-            var rippleTask = StartRippleAnimation(_animationCts.Token);
-
-            // Start the timer
-            _animationTimer.Start();
-        }
-        else
-        {
-            _circle.CancelAnimations();
-            _ripple.CancelAnimations();
+            uint duration = CalculateAnimationDuration(RoundTripTimeAverage);
+            await _circle.ScaleTo(1.2, duration);
+            await _circle.ScaleTo(1.0, duration);
         }
     }
-    private void OnAnimationTimerElapsed(object? sender, ElapsedEventArgs e)
+
+    private async Task RunRippleAnimation(CancellationToken token)
     {
-        this.Dispatcher.Dispatch(() =>
-   {
-       _animationCts.Cancel();
-   });
-    }
-
-    private async Task StartPulsingAnimation(CancellationToken cancellationToken)
-    {
-        if (!IsUp || !IsAnimated) return;
-
-        while (!cancellationToken.IsCancellationRequested && IsUp && IsAnimated)
-        {
-            uint animationDuration = CalculateAnimationDuration(RoundTripTimeAverage);
-            await _circle.ScaleTo(1.2, animationDuration);
-            await _circle.ScaleTo(1.0, animationDuration);
-        }
-
-
-
-    }
-
-    private async Task StartRippleAnimation(CancellationToken cancellationToken)
-    {
-        if (!IsUp || !IsAnimated) return;
-
         _ripple.Opacity = 0.07;
         _ripple.Scale = 1;
         double scale = CalculateRippleScale(PacketsLostPercentage);
 
-        while (!cancellationToken.IsCancellationRequested && IsUp && IsAnimated)
+        while (!token.IsCancellationRequested && IsUp && IsAnimated)
         {
-            uint animationDuration = CalculateRippleAnimationDuration(PacketsLostPercentage);
-            await _ripple.ScaleTo(scale, animationDuration);
-            await _ripple.FadeTo(0, animationDuration);
-            await StartRippleAnimation(cancellationToken);
+            uint duration = CalculateRippleAnimationDuration(PacketsLostPercentage);
+            await _ripple.ScaleTo(scale, duration);
+            await _ripple.FadeTo(0, duration);
+            _ripple.Scale = 1;
+            _ripple.Opacity = 0.07;
         }
-
-
     }
 
     private double CalculateRippleScale(double packetsLostPercentage)
     {
-        if (packetsLostPercentage <= 10)
-        {
-            // Rapid decrease in scale from 0% to 10%
-            // Scale decreases from 8.0 (at 0%) to a lower value (e.g., 2.0) at 10%
-            return 8.0 - ((packetsLostPercentage / 10.0) * 6.0); // Decreases rapidly
-        }
-        else
-        {
-            // Gradual decrease in scale for percentages above 10%
-            // This part of the formula can be adjusted as needed
-            // Continues to decrease from 2.0 at 10% down to a minimum scale at 100%
-            return 2.0 - ((packetsLostPercentage - 10) / 90.0) * 1.0; // Decreases slowly
-        }
+        return packetsLostPercentage <= 10
+            ? 8.0 - ((packetsLostPercentage / 10.0) * 6.0)
+            : 2.0 - ((packetsLostPercentage - 10) / 90.0);
     }
 
     private uint CalculateRippleAnimationDuration(double packetsLostPercentage)
     {
-        // Assuming a higher percentage means a slower animation
-        // You can adjust the formula as per your requirement
-
-        // Base duration (e.g., 1000 milliseconds for 0% loss)
         double baseDuration = 2000;
-
-        // Adjust duration based on packet loss percentage
-        // Example: Increase duration by up to double for 100% packet loss
-        double adjustedDuration = baseDuration + (baseDuration * (packetsLostPercentage / 100.0));
-
-        return (uint)adjustedDuration;
+        double adjusted = baseDuration + (baseDuration * (packetsLostPercentage / 100.0));
+        return (uint)adjusted;
     }
 
-
-    private uint CalculateAnimationDuration(double roundTripTimeAverage)
+    private uint CalculateAnimationDuration(double roundTripTime)
     {
-        // Assuming lower average time means faster pulsing.
-        // The duration of the animation increases as the round-trip time increases.
-
-        // You can add a lower limit to ensure the animation is not too fast
-        double minDuration = 300; // Minimum animation duration in milliseconds
-
-        // You can also add an upper limit to ensure the animation is not too slow
-        double maxDuration = 10000; // Maximum animation duration in milliseconds
-
-        // Directly use roundTripTimeAverage, possibly scaling it if needed
-        double duration = roundTripTimeAverage; // Simple direct assignment
-
-        // Ensuring the duration is within the min and max limits
-        duration = Math.Max(minDuration, Math.Min(duration, maxDuration));
-
+        double min = 300;
+        double max = 10000;
+        double duration = roundTripTime;
+        duration = Math.Max(min, Math.Min(duration, max));
         return (uint)duration;
     }
 
-
     public void Cleanup()
     {
-        _animationCts.Cancel();
-        _animationCts.Dispose();
-        _circle.CancelAnimations();
-        _ripple.CancelAnimations();
+        StopAnimations();
     }
-    protected override void OnParentSet()
-    {
-        base.OnParentSet();
-        if (Parent == null)
-        {
-            // Control is being removed from the visual tree
-            Cleanup();
-        }
-    }
-
 }
