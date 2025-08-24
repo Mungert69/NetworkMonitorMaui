@@ -8,14 +8,31 @@ using System;
 using System.Threading.Tasks;
 using NetworkMonitor.Objects;
 using NetworkMonitor.Service.Services.OpenAI;
+using NetworkMonitor.Connection;
 
 namespace NetworkMonitor.Maui.Services
 {
+    public interface IPlatformService
+    {
+        bool RequestPermissionsAsync();
+        Task StartBackgroundService();
+        Task StopBackgroundService();
+        bool IsServiceStarted { get; set; }
+        bool IsAuthorised { get;  }
+        string ServiceMessage { get; set; }
+        Task ChangeServiceState(bool state);
+        //void OnServiceStateChanged();
+        event EventHandler ServiceStateChanged;
+        bool DisableAgentOnServiceShutdown { get; set; }
+        void OnUpdateServiceState(ResultObj result, bool state);
+    }
     public class PlatformService : IPlatformService
     {
         protected ILogger _logger;
         //protected IDialogService _dialogService;
         protected bool _isServiceStarted;
+        protected bool _isAuthorised;
+        protected NetConnectConfig _netConfig;
         protected string _serviceMessage;
         protected bool _disableAgentOnServiceShutdown = false;
         public event EventHandler ServiceStateChanged;
@@ -34,17 +51,23 @@ namespace NetworkMonitor.Maui.Services
                 }
             }
         }
+        public bool IsAuthorised
+        {
+            get => _netConfig.Owner!="usersetup" && _isServiceStarted;
+           
+        }
        /* protected void OnServiceStateChanged()
         {
             ServiceStateChanged?.Invoke(this, EventArgs.Empty);
         }*/
 
 
-        public PlatformService( ILogger<PlatformService> logger)
+        public PlatformService( ILogger<PlatformService> logger, NetConnectConfig netConfig)
         {
             //_dialogService = dialogService;
 
             _logger = logger;
+            _netConfig = netConfig;
         }
 
         public async Task ChangeServiceState(bool state)
@@ -100,7 +123,7 @@ namespace NetworkMonitor.Maui.Services
         private BroadcastReceiver _serviceStatusReceiver;
         private TaskCompletionSource<bool> _serviceOperationCompletionSource;
 
-        public AndroidPlatformService( ILogger<PlatformService> logger) : base( logger)
+        public AndroidPlatformService( ILogger<PlatformService> logger, NetConnectConfig netConfig) : base( logger, netConfig)
         {
             try
             {
@@ -314,7 +337,7 @@ var powerService=Context.PowerService;
     {
         private IBackgroundService _backgroundService;
 
-        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger) : base( logger)
+        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger, NetConnectConfig netConfig) : base( logger, netConfig)
         {
             _backgroundService = backgroundService;
         }
