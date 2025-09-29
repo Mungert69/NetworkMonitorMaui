@@ -43,7 +43,7 @@ namespace NetworkMonitor.Maui.Services
         private string _channelId = "fre_mon_channel";
         private string _channelDescription = "Quantum Network Monitor Agent notification channel";
         private bool _channelInitialized = false;
-        private ILaunchHelper _launchHelper;
+        private IBrowserHost _browserHost;
 
         public const string ServiceBroadcastAction = "com.networkmonitor.service.STATUS";
         public const string ServiceStatusExtra = "ServiceStatus";
@@ -74,7 +74,7 @@ namespace NetworkMonitor.Maui.Services
             _processorStates = _rootProvider.ServiceProvider.GetRequiredService<LocalProcessorStates>();
             _cmdProcessorProvider = _rootProvider.ServiceProvider.GetRequiredService<ICmdProcessorProvider>();
             _platformService = _rootProvider.ServiceProvider.GetRequiredService<IPlatformService>();
-            _launchHelper = _rootProvider.ServiceProvider.GetRequiredService<ILaunchHelper>();
+            _browserHost = _rootProvider.ServiceProvider.GetRequiredService<IBrowserHost>();
         }
         private async Task StartAsync()
         {
