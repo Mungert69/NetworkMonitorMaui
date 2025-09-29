@@ -80,7 +80,7 @@ namespace NetworkMonitor.Maui.Services
         {
             try
             {
-                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider,_launchHelper);
+                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider,_browserHost);
                 var result = await _backgroundService.Start();
                 _platformService.OnUpdateServiceState(result, true);
 
