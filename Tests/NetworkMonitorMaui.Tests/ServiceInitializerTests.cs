@@ -8,7 +8,7 @@ using Xunit;
 
 namespace NetworkMonitorMaui.Tests;
 
-public class ServiceInitializerTests
+public class ServiceInitializerTests : IDisposable
 {
     private sealed class StubRootProvider : IRootNamespaceProvider
     {
@@ -21,10 +21,15 @@ public class ServiceInitializerTests
         private sealed class StubColorResource : IColorResource
         {
             public AppTheme GetRequestedTheme() => AppTheme.Light;
-            public Microsoft.Maui.Graphics.Color GetResourceColor(string key) => Microsoft.Maui.Graphics.Colors.White;
-            public Microsoft.Maui.Graphics.Color LightenColor(Microsoft.Maui.Graphics.Color color, float factor) => color;
-            public void AnimateColor(BoxView boxView, Microsoft.Maui.Graphics.Color fromColor, Microsoft.Maui.Graphics.Color toColor, uint length) { }
+            public Color GetResourceColor(string key) => Colors.White;
+            public Color LightenColor(Color color, float factor) => color;
+            public void AnimateColor(BoxView boxView, Color fromColor, Color toColor, uint length) { }
         }
+    }
+
+    public ServiceInitializerTests()
+    {
+        ServiceInitializer.ResetForTests();
     }
 
     [Fact]
@@ -38,8 +43,44 @@ public class ServiceInitializerTests
     }
 
     [Fact]
+    public void Initialize_WithDispatcher_SetsDispatcher()
+    {
+        var provider = new StubRootProvider();
+        var dispatcher = new TestDispatcher();
+
+        ServiceInitializer.Initialize(provider, dispatcher);
+
+        Assert.Same(dispatcher, ServiceInitializer.Dispatcher);
+    }
+
+    [Fact]
+    public void SetDispatcher_ReplacesExistingDispatcher()
+    {
+        var provider = new StubRootProvider();
+        ServiceInitializer.Initialize(provider, new TestDispatcher());
+        var replacement = new TestDispatcher();
+
+        ServiceInitializer.SetDispatcher(replacement);
+
+        Assert.Same(replacement, ServiceInitializer.Dispatcher);
+    }
+
+    [Fact]
+    public void Dispatcher_DefaultsToMainThreadDispatcher()
+    {
+        var dispatcher = ServiceInitializer.Dispatcher;
+
+        Assert.IsType<MainThreadDispatcher>(dispatcher);
+    }
+
+    [Fact]
     public void Initialize_NullProvider_Throws()
     {
         Assert.Throws<ArgumentNullException>(() => ServiceInitializer.Initialize(null!));
+    }
+
+    public void Dispose()
+    {
+        ServiceInitializer.ResetForTests();
     }
 }

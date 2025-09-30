@@ -42,10 +42,14 @@
                 <PackageReference Include="Microsoft.JSInterop" Version="9.0.9" />
 
         </ItemGroup>
-        <ItemGroup>
-                <ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui-Android.csproj" />
-                <ProjectReference Include="..\NetworkMonitorLib\NetworkMonitor-Maui-Android.csproj" />
-        </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui-Android.csproj" />
+		<ProjectReference Include="..\NetworkMonitorLib\NetworkMonitor-Maui-Android.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Tests\**\*.cs" />
+		<None Remove="Tests\**\*" />
+	</ItemGroup>
 
 </Project>
-

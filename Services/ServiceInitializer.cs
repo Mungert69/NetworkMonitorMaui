@@ -2,7 +2,7 @@ using NetworkMonitor.Objects;
 
 namespace NetworkMonitor.Maui.Services
 {
-    public static class ServiceInitializer
+    public static partial class ServiceInitializer
     {
         private static IRootNamespaceProvider? _rootProvider;
         private static IUiDispatcher? _dispatcher;

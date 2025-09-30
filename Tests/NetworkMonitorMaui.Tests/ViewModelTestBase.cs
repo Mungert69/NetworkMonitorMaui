@@ -11,7 +11,8 @@ public abstract class ViewModelTestBase
 {
     static ViewModelTestBase()
     {
-        ServiceInitializer.Initialize(new TestRootNamespaceProvider());
+        ServiceInitializer.ResetForTests();
+        ServiceInitializer.Initialize(new TestRootNamespaceProvider(), new TestDispatcher());
     }
 
     protected static NetConnectConfig CreateNetConnectConfig(Dictionary<string, string?>? overrides = null)
