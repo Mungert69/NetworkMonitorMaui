@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using Moq;
 using NetworkMonitor.Api.Services;
 using NetworkMonitor.Connection;
@@ -95,5 +96,68 @@ public class ScanProcessorStatesViewModelTests : ViewModelTestBase
 
         Assert.Single(states.SelectedDevices);
         Assert.Equal("10.0.0.1", states.SelectedDevices[0].Address);
+    }
+
+    [Fact]
+    public async Task Scan_SetsPopupVisibleAndAwaitsProcessorScan()
+    {
+        var config = CreateNetConnectConfig();
+        var states = new StubCmdProcessorStates { EndpointTypes = config.EndpointTypes };
+        var scanTcs = new TaskCompletionSource<bool>();
+        states.OnStartScanAsync += () =>
+        {
+            states.RunningMessage = "Scanning";
+            return scanTcs.Task;
+        };
+
+        var viewModel = CreateViewModel(states, config, out _);
+
+        var scanTask = viewModel.Scan();
+
+        Assert.True(viewModel.IsPopupVisible);
+        Assert.False(scanTask.IsCompleted);
+
+        scanTcs.SetResult(true);
+        await scanTask;
+
+        Assert.True(states.IsRunning);
+    }
+
+    [Fact]
+    public async Task Cancel_DelegatesToProcessorStates()
+    {
+        var config = CreateNetConnectConfig();
+        var states = new StubCmdProcessorStates { EndpointTypes = config.EndpointTypes };
+        var cancelTcs = new TaskCompletionSource<bool>();
+        states.OnCancelScanAsync += () =>
+        {
+            cancelTcs.SetResult(true);
+            return Task.CompletedTask;
+        };
+
+        var viewModel = CreateViewModel(states, config, out _);
+
+        await viewModel.Cancel();
+
+        await cancelTcs.Task;
+    }
+
+    [Fact]
+    public async Task AddServices_DelegatesToProcessorStates()
+    {
+        var config = CreateNetConnectConfig();
+        var states = new StubCmdProcessorStates { EndpointTypes = config.EndpointTypes };
+        var addServicesTcs = new TaskCompletionSource<bool>();
+        states.OnAddServicesAsync += () =>
+        {
+            addServicesTcs.SetResult(true);
+            return Task.CompletedTask;
+        };
+
+        var viewModel = CreateViewModel(states, config, out _);
+
+        await viewModel.AddServices();
+
+        await addServicesTcs.Task;
     }
 }

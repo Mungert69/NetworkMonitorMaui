@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Moq;
 using NetworkMonitor.Api.Services;
 using NetworkMonitor.Maui.ViewModels;
@@ -81,5 +83,78 @@ public class NetworkMonitorViewModelTests : ViewModelTestBase
         Assert.Equal("Connection successful", viewModel.ResultMessage);
         Assert.Equal("123", viewModel.ResponseTime);
         Assert.Equal("OK", viewModel.ResultStatus);
+    }
+
+    [Fact]
+    public async Task TestConnection_WithFailedResponse_SetsFailureMessage()
+    {
+        var apiServiceMock = new Mock<IApiService>();
+        apiServiceMock
+            .Setup(s => s.CheckIcmp(It.IsAny<HostObject>()))
+            .ReturnsAsync(new TResultObj<DataObj> { Success = false, Data = new DataObj() });
+
+        var viewModel = new NetworkMonitorViewModel(apiServiceMock.Object)
+        {
+            Address = "example.com",
+            Port = 80
+        };
+
+        viewModel.SelectedEndpointType = EndPointTypeFactory.GetFriendlyName("icmp");
+
+        await InvokeTestConnectionAsync(viewModel);
+
+        Assert.True(viewModel.HasResult);
+        Assert.Equal("Connection failed", viewModel.ResultMessage);
+        Assert.False(viewModel.IsBusy);
+    }
+
+    [Fact]
+    public async Task TestConnection_WhenApiThrows_ShowsError()
+    {
+        var apiServiceMock = new Mock<IApiService>();
+        apiServiceMock
+            .Setup(s => s.CheckIcmp(It.IsAny<HostObject>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        var viewModel = new NetworkMonitorViewModel(apiServiceMock.Object)
+        {
+            Address = "example.com",
+            Port = 80
+        };
+
+        viewModel.SelectedEndpointType = EndPointTypeFactory.GetFriendlyName("icmp");
+
+        await InvokeTestConnectionAsync(viewModel);
+
+        Assert.True(viewModel.HasResult);
+        Assert.Contains("boom", viewModel.ResultMessage);
+        Assert.False(viewModel.IsBusy);
+    }
+
+    [Fact]
+    public void TestConnectionCommand_ExecutesTestConnection()
+    {
+        var tcs = new TaskCompletionSource<TResultObj<DataObj>>();
+        var apiServiceMock = new Mock<IApiService>();
+        apiServiceMock
+            .Setup(s => s.CheckIcmp(It.IsAny<HostObject>()))
+            .Returns(tcs.Task);
+
+        var viewModel = new NetworkMonitorViewModel(apiServiceMock.Object)
+        {
+            Address = "example.com",
+            Port = 80
+        };
+
+        viewModel.SelectedEndpointType = EndPointTypeFactory.GetFriendlyName("icmp");
+
+        viewModel.TestConnectionCommand.Execute(null);
+
+        Assert.True(viewModel.IsBusy);
+
+        tcs.SetResult(new TResultObj<DataObj> { Success = true });
+
+        Assert.True(SpinWait.SpinUntil(() => !viewModel.IsBusy, TimeSpan.FromMilliseconds(250)));
+        Assert.True(viewModel.HasResult);
     }
 }

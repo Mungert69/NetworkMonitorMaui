@@ -1,9 +1,13 @@
-using NetworkMonitor.Connection;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using NetworkMonitor.Connection;
 using NetworkMonitor.Maui.Services;
 using NetworkMonitor.Maui.ViewModels;
-using NetworkMonitor.Processor.Services;
 using NetworkMonitor.Objects;
+using NetworkMonitor.Processor.Services;
 using Xunit;
 
 namespace NetworkMonitorMaui.Tests;
@@ -88,5 +92,44 @@ public class MainPageViewModelTests : ViewModelTestBase
 
         Assert.True(viewModel.Tasks.First(t => t.TaskDescription == "Authorize Agent").IsCompleted);
         Assert.Contains("Completed", task.ButtonText);
+    }
+
+    [Fact]
+    public async Task ExecuteAuthorizeAsync_RaisesBrowserAndSuccessAlert()
+    {
+        var config = CreateNetConnectConfig();
+        config.ClientAuthUrl = "https://auth.example.com/device";
+        var platformService = new FakePlatformService { ServiceMessage = "Idle" };
+        var authService = new FakeAuthService
+        {
+            InitializeResult = new ResultObj { Success = true, Message = "init" },
+            SendResult = new ResultObj { Success = true, Message = "send" },
+            PollResult = new ResultObj { Success = true, Message = "authorized" }
+        };
+
+        var viewModel = CreateViewModel(config, platformService, authService);
+        viewModel.PollingCts = new CancellationTokenSource();
+
+        var browserRequests = new List<string>();
+        var loadingStates = new List<(bool show, bool showCancel)>();
+        var alerts = new List<(string Title, string Message)>();
+
+        viewModel.OpenBrowserRequested += (_, url) => browserRequests.Add(url);
+        viewModel.ShowLoadingMessage += (_, args) => loadingStates.Add(args);
+        viewModel.ShowAlertRequested += (_, args) => alerts.Add(args);
+
+        var method = typeof(MainPageViewModel)
+            .GetMethod("ExecuteAuthorizeAsync", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("ExecuteAuthorizeAsync not found.");
+
+        await ((Task)method.Invoke(viewModel, Array.Empty<object>())!);
+
+        Assert.Contains(config.ClientAuthUrl, browserRequests);
+        Assert.Contains(loadingStates, state => state.show && state.showCancel);
+        Assert.Contains(loadingStates, state => !state.show);
+        Assert.Contains(alerts, alert => alert.Title == "Success" && alert.Message.Contains("Authorization successful"));
+        Assert.Equal(1, authService.InitializeCalls);
+        Assert.Equal(1, authService.SendAuthCalls);
+        Assert.Equal(1, authService.PollCalls);
     }
 }

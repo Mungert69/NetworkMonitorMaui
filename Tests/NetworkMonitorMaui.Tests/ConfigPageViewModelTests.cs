@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NetworkMonitor.Maui.Services;
 using NetworkMonitor.Maui.ViewModels;
 using NetworkMonitor.Objects;
 using Xunit;
@@ -30,5 +31,21 @@ public class ConfigPageViewModelTests : ViewModelTestBase
         Assert.Equal("app-42", viewModel.AppID);
         Assert.Equal("UnitTest", viewModel.MonitorLocation);
         Assert.Equal("auth-key", viewModel.AuthKey);
+    }
+
+    [Fact]
+    public void NetConfigPropertyChange_PropagatesThroughDispatcher()
+    {
+        var config = CreateNetConnectConfig();
+        var dispatcher = new TestDispatcher();
+        var viewModel = new ConfigPageViewModel(GetLogger<ConfigPageViewModel>(), config, dispatcher);
+
+        string? observedProperty = null;
+        viewModel.PropertyChanged += (_, args) => observedProperty ??= args.PropertyName;
+
+        config.ClientId = "updated-client";
+
+        Assert.Equal(nameof(ConfigPageViewModel.ClientId), observedProperty);
+        Assert.Equal(1, dispatcher.DispatchCalls);
     }
 }

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using NetworkMonitor.Maui.Services;
 using NetworkMonitor.Maui.ViewModels;
 using NetworkMonitor.Objects;
 using Xunit;
@@ -50,5 +52,27 @@ public class ProcessorStatesViewModelTests : ViewModelTestBase
 
         Assert.True(viewModel.IsPopupVisible);
         Assert.Contains("Running Message", viewModel.PopupMessage);
+    }
+
+    [Fact]
+    public void PropertyChange_UpdatesBindingsAndPopup()
+    {
+        var states = new LocalProcessorStates
+        {
+            RunningMessage = "Initial"
+        };
+        var dispatcher = new TestDispatcher();
+        var viewModel = new ProcessorStatesViewModel(GetLogger<ProcessorStatesViewModel>(), states, dispatcher);
+
+        var observedProperties = new List<string>();
+        viewModel.PropertyChanged += (_, args) => observedProperties.Add(args.PropertyName ?? string.Empty);
+
+        viewModel.ShowPopupCommand.Execute("RunningMessage");
+        states.RunningMessage = "Updated";
+
+        Assert.Contains(nameof(ProcessorStatesViewModel.RunningMessage), observedProperties);
+        Assert.Contains("Updated", viewModel.PopupMessage);
+        Assert.True(viewModel.IsPopupVisible);
+        Assert.True(dispatcher.DispatchCalls > 0);
     }
 }
