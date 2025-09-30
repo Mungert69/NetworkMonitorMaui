@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Input;
 using Microsoft.Maui.Controls;
 using Microsoft.Extensions.Logging;
+using NetworkMonitor.Maui.Services;
 using System.Collections.ObjectModel;
 using NetworkMonitor.Utils;
 using NetworkMonitor.Api.Services;
@@ -16,6 +17,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private readonly ILocalCmdProcessorStates _cmdProcessorStates;
         private readonly ILogger _logger;
         private readonly IApiService _apiService;
+        private readonly IUiDispatcher _dispatcher;
         public ObservableCollection<string> EndpointTypes { get; set; }
         public ObservableCollection<NetworkInterfaceInfo> NetworkInterfaces =>
            new ObservableCollection<NetworkInterfaceInfo>(_cmdProcessorStates.AvailableNetworkInterfaces);
@@ -32,11 +34,12 @@ namespace NetworkMonitor.Maui.ViewModels
         }
 
 
-        public ScanProcessorStatesViewModel(ILogger<ScanProcessorStatesViewModel> logger, ICmdProcessorProvider cmdProcessorProvider, IApiService apiService,NetConnectConfig netConfig)
+        public ScanProcessorStatesViewModel(ILogger<ScanProcessorStatesViewModel> logger, ICmdProcessorProvider cmdProcessorProvider, IApiService apiService, NetConnectConfig netConfig, IUiDispatcher? dispatcher = null)
         {
             try
             {
                 _logger = logger;
+                _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
                 _cmdProcessorStates = cmdProcessorProvider.GetProcessorStates("Nmap");
                 _cmdProcessorStates.EndpointTypes = netConfig.EndpointTypes;
                 _cmdProcessorStates.UseDefaultEndpointType = netConfig.UseDefaultEndpointType;
@@ -116,15 +119,15 @@ namespace NetworkMonitor.Maui.ViewModels
 
         private void OnProcessorStatesChanged(object? sender, PropertyChangedEventArgs e)
         {
-            MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        OnPropertyChanged(e.PropertyName);
+            _dispatcher.Dispatch(() =>
+            {
+                OnPropertyChanged(e.PropertyName);
 
-                        if (IsPopupVisible)
-                        {
-                            UpdatePopupMessage(e.PropertyName);
-                        }
-                    });
+                if (IsPopupVisible)
+                {
+                    UpdatePopupMessage(e.PropertyName);
+                }
+            });
         }
 
         private void UpdatePopupMessage(string? propertyName)

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using NetworkMonitor.Connection;
 using NetworkMonitor.Objects;
 using Microsoft.Extensions.Logging;
+using NetworkMonitor.Maui.Services;
 
 namespace NetworkMonitor.Maui.ViewModels
 {
@@ -10,12 +11,14 @@ namespace NetworkMonitor.Maui.ViewModels
     {
         private readonly NetConnectConfig _netConfig;
         private readonly ILogger _logger;
+        private readonly IUiDispatcher _dispatcher;
 
-        public ConfigPageViewModel(ILogger<ConfigPageViewModel> logger, NetConnectConfig netConfig)
+        public ConfigPageViewModel(ILogger<ConfigPageViewModel> logger, NetConnectConfig netConfig, IUiDispatcher? dispatcher = null)
         {
             try {
                 _logger = logger;
                 _netConfig = netConfig;
+                _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
                 _netConfig.PropertyChanged += NetConfig_PropertyChanged;
                   }
             catch (Exception ex)
@@ -28,8 +31,8 @@ namespace NetworkMonitor.Maui.ViewModels
         {
             try
             {
-                 MainThread.BeginInvokeOnMainThread(() =>
-                   {
+                _dispatcher.Dispatch(() =>
+                {
                 switch (e.PropertyName)
                 {
                     case nameof(NetConnectConfig.BaseFusionAuthURL):
@@ -66,7 +69,8 @@ namespace NetworkMonitor.Maui.ViewModels
                         // If the property name does not match any known properties, you might choose to log this or handle it as needed.
                         // This could be useful for debugging or if you're expecting other properties to change that are not listed here.
                         break;
-                }});
+                }
+                });
             }
             catch (Exception ex)
             {

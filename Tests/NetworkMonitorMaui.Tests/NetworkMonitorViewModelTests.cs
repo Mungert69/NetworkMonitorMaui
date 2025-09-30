@@ -8,7 +8,7 @@ using Xunit;
 
 namespace NetworkMonitorMaui.Tests;
 
-public class NetworkMonitorViewModelTests
+public class NetworkMonitorViewModelTests : ViewModelTestBase
 {
     private static Task InvokeTestConnectionAsync(NetworkMonitorViewModel viewModel)
     {

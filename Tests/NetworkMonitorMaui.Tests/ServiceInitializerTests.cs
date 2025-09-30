@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
@@ -5,7 +6,7 @@ using NetworkMonitor.Maui.Controls;
 using NetworkMonitor.Maui.Services;
 using Xunit;
 
-namespace NetworkMonitorQuantumSecure.Tests;
+namespace NetworkMonitorMaui.Tests;
 
 public class ServiceInitializerTests
 {
