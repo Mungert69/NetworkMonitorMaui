@@ -31,8 +31,9 @@ namespace NetworkMonitor.Maui.Services
         private LocalProcessorStates _processorStates;
         private ICmdProcessorProvider _cmdProcessorProvider;
         private IBrowserHost? _browserHost;
+        private IProtectedConfigManager _protectedConfigManager;
         private bool _isRunning = false;
-        public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider, IBrowserHost browserHost)
+        public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider, IBrowserHost browserHost, IProtectedConfigManager protectedConfigManager)
         {
             _logger = logger;
             _netConfig = netConfig;
@@ -43,6 +44,7 @@ namespace NetworkMonitor.Maui.Services
             _processorStates = processorStates;
             _cmdProcessorProvider = cmdProcessorProvider;
             _browserHost = browserHost;
+            _protectedConfigManager = protectedConfigManager;
 
         }
 
@@ -67,7 +69,7 @@ namespace NetworkMonitor.Maui.Services
 # else
   _ = _connectFactory.SetupChromium(_netConfig);
 # endif
-                _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _monitorPingInfoView);
+                _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _protectedConfigManager,_monitorPingInfoView);
                 _rabbitListener = new RabbitListener(_monitorPingProcessor, _loggerFactory.CreateLogger<RabbitListener>(), _netConfig, _processorStates, _cmdProcessorProvider);
                 var resultListener = await _rabbitListener.Setup();
                 var resultProcessor = await _monitorPingProcessor.Init(new ProcessorInitObj());
