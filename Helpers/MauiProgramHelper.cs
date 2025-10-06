@@ -66,6 +66,7 @@ namespace NetworkMonitor.Maui.Helpers
             "ServiceServer",
             "TranscribeAudioUrl",
             "IsChatMode",
+            "FilterStrategies",
             "OpensslVersion",
             "LocalSystemUrl:RabbitHostName",
             "LocalSystemUrl:RabbitPort"
