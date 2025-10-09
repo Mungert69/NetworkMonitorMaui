@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.110" />
+    <PackageReference Include="Microsoft.Maui.Graphics" Version="9.0.110" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../NetworkMonitorLib/NetworkMonitor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Services/IUiDispatcher.cs" Link="Services/IUiDispatcher.cs" />
+    <Compile Include="../../Services/MainThreadDispatcher.cs" Link="Services/MainThreadDispatcher.cs" />
+    <Compile Include="../../Services/ServiceInitializer.cs" Link="Services/ServiceInitializer.cs" />
+    <Compile Include="../../Services/IRootNamespaceProvider.cs" Link="Services/IRootNamespaceProvider.cs" />
+    <Compile Include="../../Services/DialogService.cs" Link="Services/DialogService.cs" />
+    <Compile Include="../../ViewModels/BasePopupViewModel.cs" Link="ViewModels/BasePopupViewModel.cs" />
+    <Compile Include="../../ViewModels/NetworkMonitorViewModel.cs" Link="ViewModels/NetworkMonitorViewModel.cs" />
+    <Compile Include="../../ViewModels/MainPageViewModel.cs" Link="ViewModels/MainPageViewModel.cs" />
+    <Compile Include="../../ViewModels/ExitPageViewModel.cs" Link="ViewModels/ExitPageViewModel.cs" />
+    <Compile Include="../../ViewModels/ConfigPageViewModel.cs" Link="ViewModels/ConfigPageViewModel.cs" />
+    <Compile Include="../../ViewModels/ProcesorStatesViewModel.cs" Link="ViewModels/ProcesorStatesViewModel.cs" />
+    <Compile Include="../../ViewModels/ScanProcessorStatesViewModel.cs" Link="ViewModels/ScanProcessorStatesViewModel.cs" />
+    <Compile Include="../../ViewModels/EventToCommandBehavior.cs" Link="ViewModels/EventToCommandBehavior.cs" />
+    <Compile Include="../../Controls/IColorResource.cs" Link="Controls/IColorResource.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>
