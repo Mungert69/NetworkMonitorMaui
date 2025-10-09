@@ -32,6 +32,7 @@
     <Compile Include="../../Services/MainThreadDispatcher.cs" Link="Services/MainThreadDispatcher.cs" />
     <Compile Include="../../Services/ServiceInitializer.cs" Link="Services/ServiceInitializer.cs" />
     <Compile Include="../../Services/IRootNamespaceProvider.cs" Link="Services/IRootNamespaceProvider.cs" />
+    <Compile Include="../../Services/DialogService.cs" Link="Services/DialogService.cs" />
     <Compile Include="../../ViewModels/BasePopupViewModel.cs" Link="ViewModels/BasePopupViewModel.cs" />
     <Compile Include="../../ViewModels/NetworkMonitorViewModel.cs" Link="ViewModels/NetworkMonitorViewModel.cs" />
     <Compile Include="../../ViewModels/MainPageViewModel.cs" Link="ViewModels/MainPageViewModel.cs" />

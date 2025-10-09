@@ -9,7 +9,7 @@ namespace NetworkMonitorMaui.Tests;
 
 public abstract class ViewModelTestBase
 {
-    static ViewModelTestBase()
+    protected ViewModelTestBase()
     {
         ServiceInitializer.ResetForTests();
         ServiceInitializer.Initialize(new TestRootNamespaceProvider(), new TestDispatcher());

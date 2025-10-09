@@ -65,9 +65,9 @@ namespace NetworkMonitor.Maui.ViewModels
 
             if (_platformService != null)
             {
-                _isServiceStarted = _platformService?.IsServiceStarted ?? false;
-                _disableAgentOnServiceShutdown = _platformService?.DisableAgentOnServiceShutdown ?? false;
-                _serviceMessage = _platformService?.ServiceMessage ?? "The Agent is disabled";
+                _platformService.ServiceStateChanged += OnPlatformServiceStateChanged;
+                _disableAgentOnServiceShutdown = _platformService.DisableAgentOnServiceShutdown;
+                UpdateFromPlatformService();
             }
             else
             {
@@ -85,6 +85,26 @@ namespace NetworkMonitor.Maui.ViewModels
             if (_netConfig.IsChatMode) _tasks=GetChatModeTasks();
             else _tasks = GetStandardModeTasks();
 
+        }
+
+        private void OnPlatformServiceStateChanged(object? sender, EventArgs e)
+        {
+            MainThread.BeginInvokeOnMainThread(UpdateFromPlatformService);
+        }
+
+        private void UpdateFromPlatformService()
+        {
+            if (_platformService == null)
+            {
+                return;
+            }
+
+            IsServiceStarted = _platformService.IsServiceStarted;
+            _disableAgentOnServiceShutdown = _platformService.DisableAgentOnServiceShutdown;
+            ServiceMessage = string.IsNullOrWhiteSpace(_platformService.ServiceMessage)
+                ? "The Agent is disabled"
+                : _platformService.ServiceMessage;
+            ShowTasks = IsServiceStarted;
         }
 
         public List<TaskItem> GetTasks()
@@ -205,7 +225,7 @@ namespace NetworkMonitor.Maui.ViewModels
                 // Trigger service state change
                 await ChangeServiceAsync(value);
 
-                return _isServiceStarted; // Return actual service state
+                return IsServiceStarted; // Return actual service state
             }
             catch (Exception ex)
             {
@@ -230,14 +250,8 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 try
                 {
-                    _isServiceStarted = _platformService?.IsServiceStarted ?? false;
-                    _disableAgentOnServiceShutdown = _platformService?.DisableAgentOnServiceShutdown ?? false;
+                    UpdateFromPlatformService();
                     ShowLoadingMessage?.Invoke(this, (false, false));
-                    MainThread.BeginInvokeOnMainThread(() =>
-              {
-                  ShowTasks = _isServiceStarted;
-                  ServiceMessage = _platformService?.ServiceMessage ?? "";
-              });
 
 
                 }
@@ -246,6 +260,12 @@ namespace NetworkMonitor.Maui.ViewModels
                     _logger.LogError($"Error in ChangeServiceAsync Second Try Catch : {ex.Message}");
                 }
             }
+        }
+
+        public bool IsServiceStarted
+        {
+            get => _isServiceStarted;
+            private set => SetProperty(ref _isServiceStarted, value);
         }
         private void OnAgentUserFlowPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {

@@ -39,5 +39,6 @@ public sealed class FakePlatformService : IPlatformService
     {
         IsServiceStarted = state && result.Success;
         ServiceMessage = result.Message;
+        ServiceStateChanged?.Invoke(this, EventArgs.Empty);
     }
 }
