@@ -36,6 +36,7 @@
     <Compile Include="../../ViewModels/BasePopupViewModel.cs" Link="ViewModels/BasePopupViewModel.cs" />
     <Compile Include="../../ViewModels/NetworkMonitorViewModel.cs" Link="ViewModels/NetworkMonitorViewModel.cs" />
     <Compile Include="../../ViewModels/MainPageViewModel.cs" Link="ViewModels/MainPageViewModel.cs" />
+    <Compile Include="../../ViewModels/ExitPageViewModel.cs" Link="ViewModels/ExitPageViewModel.cs" />
     <Compile Include="../../ViewModels/ConfigPageViewModel.cs" Link="ViewModels/ConfigPageViewModel.cs" />
     <Compile Include="../../ViewModels/ProcesorStatesViewModel.cs" Link="ViewModels/ProcesorStatesViewModel.cs" />
     <Compile Include="../../ViewModels/ScanProcessorStatesViewModel.cs" Link="ViewModels/ScanProcessorStatesViewModel.cs" />
