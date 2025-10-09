@@ -7,8 +7,8 @@
         <AssemblyName>NetworkMonitorMaui</AssemblyName>
         <RootNamespace>NetworkMonitor.Maui</RootNamespace>
         <!-- Display name -->
-        <ApplicationDisplayVersion>0.0.2</ApplicationDisplayVersion>
-        <ApplicationVersion>2</ApplicationVersion>
+        <ApplicationDisplayVersion>0.0.3</ApplicationDisplayVersion>
+        <ApplicationVersion>3</ApplicationVersion>
         <DefineConstants>WINDOWS</DefineConstants>
     </PropertyGroup>
 
@@ -33,12 +33,16 @@
 
     </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Update="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.110" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Update="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.110" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Tests\**\*.cs" />
+		<None Remove="Tests\**\*" />
+	</ItemGroup>
 
 </Project>
-

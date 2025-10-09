@@ -2,13 +2,29 @@ using NetworkMonitor.Objects;
 
 namespace NetworkMonitor.Maui.Services
 {
-    public static class ServiceInitializer
+    public static partial class ServiceInitializer
     {
-        public static IRootNamespaceProvider RootProvider { get; private set; }
+        private static IRootNamespaceProvider? _rootProvider;
+        private static IUiDispatcher? _dispatcher;
 
-        public static void Initialize(IRootNamespaceProvider provider)
+        public static IRootNamespaceProvider RootProvider =>
+            _rootProvider ?? throw new InvalidOperationException("ServiceInitializer has not been initialized. Call ServiceInitializer.Initialize during app startup.");
+
+        public static IUiDispatcher Dispatcher =>
+            _dispatcher ??= new MainThreadDispatcher();
+
+        public static void Initialize(IRootNamespaceProvider provider, IUiDispatcher? dispatcher = null)
         {
-            RootProvider = provider ?? throw new ArgumentNullException(nameof(provider));
+            _rootProvider = provider ?? throw new ArgumentNullException(nameof(provider));
+            if (dispatcher != null)
+            {
+                _dispatcher = dispatcher;
+            }
+        }
+
+        public static void SetDispatcher(IUiDispatcher dispatcher)
+        {
+            _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         }
     }
 }

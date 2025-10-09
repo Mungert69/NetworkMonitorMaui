@@ -7,8 +7,8 @@
                 <AssemblyName>NetworkMonitorMaui</AssemblyName>
                 <RootNamespace>NetworkMonitor.Maui</RootNamespace>
                 <!-- Display name -->
-                <ApplicationDisplayVersion>0.0.2</ApplicationDisplayVersion>
-                <ApplicationVersion>2</ApplicationVersion>
+                <ApplicationDisplayVersion>0.0.3</ApplicationDisplayVersion>
+                <ApplicationVersion>3</ApplicationVersion>
                 <DefineConstants>ANDROID</DefineConstants>
                 <AndroidSdkDirectory>/usr/lib/android-sdk</AndroidSdkDirectory>
                 <!--
@@ -27,25 +27,29 @@
 
 
         <ItemGroup>
-                <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
-                <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+                <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+                <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
                 <PackageReference Include="CommunityToolkit.Maui" Version="11.2.0" />
                 <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-                <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
-                <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.100" />
-                <PackageReference Include="Microsoft.Maui.Core" Version="9.0.100" />
-                <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.100" />
-                <PackageReference Include="Microsoft.Maui.Graphics" Version="9.0.100" />
-                <PackageReference Include="Microsoft.AspNetCore.Components" Version="9.0.8" />
-                <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.8" />
-                <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.8" />
-                <PackageReference Include="Microsoft.JSInterop" Version="9.0.8" />
+                <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.110" />
+                <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.110" />
+                <PackageReference Include="Microsoft.Maui.Core" Version="9.0.110" />
+                <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.110" />
+                <PackageReference Include="Microsoft.Maui.Graphics" Version="9.0.110" />
+                <PackageReference Include="Microsoft.AspNetCore.Components" Version="9.0.9" />
+                <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.9" />
+                <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.9" />
+                <PackageReference Include="Microsoft.JSInterop" Version="9.0.9" />
 
         </ItemGroup>
-        <ItemGroup>
-                <ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui-Android.csproj" />
-                <ProjectReference Include="..\NetworkMonitorLib\NetworkMonitor-Maui-Android.csproj" />
-        </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui-Android.csproj" />
+		<ProjectReference Include="..\NetworkMonitorLib\NetworkMonitor-Maui-Android.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Tests\**\*.cs" />
+		<None Remove="Tests\**\*" />
+	</ItemGroup>
 
 </Project>
-

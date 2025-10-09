@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Input;
 using Microsoft.Maui.Controls;
 using Microsoft.Extensions.Logging;
+using NetworkMonitor.Maui.Services;
 namespace NetworkMonitor.Maui.ViewModels
 {
     public class ProcessorStatesViewModel : BasePopupViewModel
@@ -12,6 +13,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private readonly LocalProcessorStates _processorStates;
         public ICommand ShowPopupCommand { get; private set; }
         private readonly ILogger _logger;
+        private readonly IUiDispatcher _dispatcher;
         private string _popupMessageType = "";
         // Local backing fields
         private bool _isRunning;
@@ -23,13 +25,14 @@ namespace NetworkMonitor.Maui.ViewModels
         private string _runningMessage;
         private string _connectRunningMessage;
 
-        public ProcessorStatesViewModel(ILogger<ProcessorStatesViewModel> logger, LocalProcessorStates processorStates)
+        public ProcessorStatesViewModel(ILogger<ProcessorStatesViewModel> logger, LocalProcessorStates processorStates, IUiDispatcher? dispatcher = null)
         {
             try
             {
                 // _logger = MauiProgram.ServiceProvider.GetRequiredService<ILogger<ProcessorStatesViewModel>>();
                 // _processorStates = MauiProgram.ServiceProvider.GetRequiredService<LocalProcessorStates>();
                 _logger = logger; _processorStates = processorStates;
+                _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
 
                 // Initialize local copies
                 _isRunning = _processorStates.IsRunning;
@@ -162,7 +165,7 @@ namespace NetworkMonitor.Maui.ViewModels
 
         private void OnProcessorStatesChanged(object? sender, PropertyChangedEventArgs e)
         {
-            MainThread.BeginInvokeOnMainThread(() =>
+            _dispatcher.Dispatch(() =>
             {
                 // Update the corresponding local property based on the changed property name
                 switch (e.PropertyName)

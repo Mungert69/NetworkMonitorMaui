@@ -12,6 +12,7 @@ using NetworkMonitor.Objects.ServiceMessage;
 using NetworkMonitor.Utils.Helpers;
 using NetworkMonitor.DTOs;
 using NetworkMonitor.Objects;
+using NetworkMonitor.Security;
 using Microsoft.Extensions.Configuration;
 using NetworkMonitor.Maui.Services;
 using NetworkMonitor.Maui;
@@ -37,13 +38,14 @@ namespace NetworkMonitor.Maui.Services
         private IPlatformService _platformService;
         private IFileRepo _fileRepo;
         private IRootNamespaceProvider _rootProvider;
+        private IProtectedConfigManager _protectedConfigManager;
         private NotificationManagerCompat _compatManager;
         private int messageId = 0;
         private string _channelName = "FreeNetworkMonitor";
         private string _channelId = "fre_mon_channel";
         private string _channelDescription = "Quantum Network Monitor Agent notification channel";
         private bool _channelInitialized = false;
-        private ILaunchHelper _launchHelper;
+        private IBrowserHost _browserHost;
 
         public const string ServiceBroadcastAction = "com.networkmonitor.service.STATUS";
         public const string ServiceStatusExtra = "ServiceStatus";
@@ -74,13 +76,14 @@ namespace NetworkMonitor.Maui.Services
             _processorStates = _rootProvider.ServiceProvider.GetRequiredService<LocalProcessorStates>();
             _cmdProcessorProvider = _rootProvider.ServiceProvider.GetRequiredService<ICmdProcessorProvider>();
             _platformService = _rootProvider.ServiceProvider.GetRequiredService<IPlatformService>();
-            _launchHelper = _rootProvider.ServiceProvider.GetRequiredService<ILaunchHelper>();
+            _browserHost = _rootProvider.ServiceProvider.GetRequiredService<IBrowserHost>();
+            _protectedConfigManager = _rootProvider.ServiceProvider.GetRequiredService<IProtectedConfigManager>();
         }
         private async Task StartAsync()
         {
             try
             {
-                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider,_launchHelper);
+                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider,_browserHost, _protectedConfigManager);
                 var result = await _backgroundService.Start();
                 _platformService.OnUpdateServiceState(result, true);
 

@@ -36,6 +36,17 @@ namespace NetworkMonitor.Maui.Services
         protected string _serviceMessage;
         protected bool _disableAgentOnServiceShutdown = false;
         public event EventHandler ServiceStateChanged;
+        protected void RaiseServiceStateChanged()
+        {
+            try
+            {
+                ServiceStateChanged?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error raising ServiceStateChanged event");
+            }
+        }
         //public event EventHandler CloseAgentChanged;
         public bool IsServiceStarted
         {
@@ -242,25 +253,15 @@ var powerService=Context.PowerService;
                      // Update PlatformService properties
                     if (result.Success)
                     {
-                     
-                     
-                        if (IsServiceStarted) ServiceMessage = " Agent enabled. Complete tasks below to start monitoring...";
-                        else
-                        {
-                            ServiceMessage = " Agent disabled. You can now close the App.";
-                        }
-                        _logger.LogInformation(result.Message+ServiceMessage);
+                        ServiceMessage = IsServiceStarted ? "Started agent." : "Stopped agent.";
+                        _logger.LogInformation(ServiceMessage);
                         _serviceOperationCompletionSource?.SetResult(true);
-
                     }
                     else
                     {
-                        var stateStr = "start";
-                        if (IsServiceStarted) stateStr = "stop";
-
-                        ServiceMessage = $" Agent service failed to {stateStr}. Service message was : {result.Message}";
-                         _logger.LogError(result.Message+ServiceMessage);
-                       
+                        var stateStr = IsServiceStarted ? "stop" : "start";
+                        ServiceMessage = $"Agent failed to {stateStr}: {result.Message}";
+                        _logger.LogError(ServiceMessage);
                         _serviceOperationCompletionSource?.SetResult(false);
 
                     }
@@ -268,7 +269,7 @@ var powerService=Context.PowerService;
                     // OnServiceStateChanged();
 
                     // Optionally, notify the UI or log the status
-                
+                RaiseServiceStateChanged();
             }
             catch (Exception e)
             {
@@ -300,10 +301,17 @@ var powerService=Context.PowerService;
                         // Update PlatformService properties
                         if (serviceChangeSuccess)
                         {
-                            if (_platformService.IsServiceStarted) _platformService.ServiceMessage = "Android Agent enabled. Complete tasks below to start monitoring...";
+                            if (_platformService.IsServiceStarted)
+                            {
+                                _platformService.ServiceMessage = string.IsNullOrWhiteSpace(message)
+                                    ? "Started agent."
+                                    : message;
+                            }
                             else
                             {
-                                _platformService.ServiceMessage = "Android Agent disabled. You can now close the App.";
+                                _platformService.ServiceMessage = string.IsNullOrWhiteSpace(message)
+                                    ? "Stopped agent."
+                                    : message;
                             }
                             _platformService._serviceOperationCompletionSource?.SetResult(true);
 
@@ -321,6 +329,7 @@ var powerService=Context.PowerService;
                         //_platformService.OnServiceStateChanged();
 
                         // Optionally, notify the UI or log the status
+                        _platformService.RaiseServiceStateChanged();
                     }
                 }
                 catch (Exception e)
@@ -375,10 +384,13 @@ var powerService=Context.PowerService;
             try
             {
                 var result = await _backgroundService.Start();
-                if (result.Success) _serviceMessage = " Agent enabled. Complete tasks below to start monitoring...";
-                else _serviceMessage = $" Agent service failed to start. Service message was : {result.Message}";
+                    if (result.Success)
+                    {
+                        _serviceMessage = "Started agent.";
+                    }
+                    else _serviceMessage = $"Agent failed to start: {result.Message}";
                 if (result.Success) _isServiceStarted = true;
-                //OnServiceStateChanged();
+                RaiseServiceStateChanged();
             }
             catch (Exception ex)
             {
@@ -391,10 +403,13 @@ var powerService=Context.PowerService;
             try
             {
                 var result = await _backgroundService.Stop();
-                if (result.Success) _serviceMessage = " Agent disabled. You can now close the App.";
-                else _serviceMessage = $" Agent service failed to stop. Service message was : {result.Message}";
+                if (result.Success)
+                {
+                    _serviceMessage = "Stopped agent.";
+                }
+                else _serviceMessage = $"Agent failed to stop: {result.Message}";
                 if (result.Success) _isServiceStarted = false;
-               // OnServiceStateChanged();
+                RaiseServiceStateChanged();
             }
             catch (Exception ex)
             {
