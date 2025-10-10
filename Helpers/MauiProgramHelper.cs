@@ -3,35 +3,37 @@ using NetworkMonitor.Utils.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace NetworkMonitor.Maui.Helpers
 {
     public class MauiProgramHelper
     {
-        private static void SetAppId(Dictionary<string, object> dict)
+        private static void SetAppId(JsonObject root)
         {
-            if (dict.TryGetValue("AppID", out var appIdObj))
+            if (root.TryGetPropertyValue("AppID", out var appIdNode))
             {
-                var appId = appIdObj?.ToString()?.Trim();
+                var appId = appIdNode?.ToString()?.Trim();
 
                 if (string.Equals(appId, "usersetup", StringComparison.OrdinalIgnoreCase))
                 {
-                    dict["AppID"] = $"{Guid.NewGuid()}-usersetup";
+                    root["AppID"] = $"{Guid.NewGuid()}-usersetup";
                 }
             }
         }
 
-        private static void SetAppName(Dictionary<string, object> dict, string fullAppName)
+        private static void SetAppName(JsonObject root, string fullAppName)
         {
             // Cross-platform: AppInfo.Current.Name works on Android, Windows, iOS, MacCatalyst
 
 
             if (!string.IsNullOrWhiteSpace(fullAppName))
             {
-                dict["AppName"] = GenerateShortKey(fullAppName);
+                root["AppName"] = GenerateShortKey(fullAppName);
             }
         }
         public static string GenerateShortKey(string appName)
@@ -56,83 +58,48 @@ namespace NetworkMonitor.Maui.Helpers
                 string localAppSettingsPath = Path.Combine(FileSystem.AppDataDirectory, "appsettings.json");
 
                 // List of fields that should always be overwritten by the packaged version
-                var fieldsToOverwrite = new List<string>
-        {
-            "ClientId",
-            "BaseFusionAuthURL",
-            "LoadServer",
-            "ChatServer",
-            "ServiceDomain",
-            "ServiceServer",
-            "TranscribeAudioUrl",
-            "IsChatMode",
-            "FilterStrategies",
-            "OpensslVersion",
-            "LocalSystemUrl:RabbitHostName",
-            "LocalSystemUrl:RabbitPort"
-
-        };
+                var fieldsToOverwrite = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "ClientId",
+                    "BaseFusionAuthURL",
+                    "LoadServer",
+                    "ChatServer",
+                    "ServiceDomain",
+                    "ServiceServer",
+                    "TranscribeAudioUrl",
+                    "IsChatMode",
+                    "FilterStrategies",
+                    "OpensslVersion",
+                    "LocalSystemUrl:RabbitHostName",
+                    "LocalSystemUrl:RabbitPort"
+                };
 
                 // Load the packaged configuration first
                 using var stream = FileSystem.OpenAppPackageFileAsync("appsettings.json").Result;
-                IConfigurationRoot packagedConfig = new ConfigurationBuilder()
-                    .AddJsonStream(stream)
-                    .Build();
+                using var reader = new StreamReader(stream);
+                var packagedJson = reader.ReadToEnd();
+                var packagedRoot = JsonNode.Parse(packagedJson) as JsonObject
+                    ?? throw new InvalidOperationException("Packaged configuration is not a JSON object.");
 
-                // Convert to dictionary for easier comparison
-                var packagedDict = GetConfigDictionary(packagedConfig);
+                JsonObject mergedRoot;
 
                 if (File.Exists(localAppSettingsPath))
                 {
                     // Load existing user configuration
-                    IConfigurationRoot userConfig = new ConfigurationBuilder()
-                        .AddJsonFile(localAppSettingsPath, optional: false, reloadOnChange: false)
-                        .Build();
+                    var userJson = File.ReadAllText(localAppSettingsPath);
+                    var userRoot = JsonNode.Parse(userJson) as JsonObject ?? new JsonObject();
 
-                    var userDict = GetConfigDictionary(userConfig);
-
-                    // Process all fields
-                    foreach (var kvp in packagedDict)
-                    {
-                        if (!userDict.ContainsKey(kvp.Key))
-                        {
-                            // Add new field if it doesn't exist in user config
-                            userDict[kvp.Key] = kvp.Value;
-                        }
-                        else if (fieldsToOverwrite.Contains(kvp.Key))
-                        {
-                            // Overwrite the field if it's in our overwrite list
-                            userDict[kvp.Key] = kvp.Value;
-                        }
-                        // Existing fields not in the overwrite list remain unchanged
-                    }
-
-                    SetAppName(userDict, fullAppName);
-                    SetAppId(userDict);
-
-
-                    // Save the augmented configuration
-                    File.WriteAllText(localAppSettingsPath,
-                        JsonSerializer.Serialize(userDict, new JsonSerializerOptions { WriteIndented = true }));
-                    config = new ConfigurationBuilder()
-                            .AddInMemoryCollection(ConvertToKeyValuePairs(userDict))
-                            .Build();
+                    mergedRoot = MergeAppSettings(userRoot, packagedRoot, fieldsToOverwrite, fullAppName);
                 }
                 else
                 {
-                    // First run - just use the packaged config
-                    SetAppName(packagedDict, fullAppName);
-                    SetAppId(packagedDict);
-
-                    File.WriteAllText(localAppSettingsPath,
-                        JsonSerializer.Serialize(packagedDict, new JsonSerializerOptions { WriteIndented = true }));
-
-                    // Build config from the modified dictionary, not the old packagedConfig
-                    config = new ConfigurationBuilder()
-                        .AddInMemoryCollection(ConvertToKeyValuePairs(packagedDict))
-                        .Build();
-
+                    mergedRoot = MergeAppSettings(null, packagedRoot, fieldsToOverwrite, fullAppName);
                 }
+
+                var serialized = mergedRoot.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(localAppSettingsPath, serialized);
+
+                config = BuildConfigurationFromJson(serialized);
             }
             catch (Exception ex)
             {
@@ -141,40 +108,70 @@ namespace NetworkMonitor.Maui.Helpers
             builder.Configuration.AddConfiguration(config!);
         }
 
-        // Helper to convert configuration to flat dictionary
-        private static Dictionary<string, object> GetConfigDictionary(IConfiguration config)
+        internal static JsonObject MergeAppSettings(JsonObject? userRoot, JsonObject packagedRoot, IEnumerable<string> overwritePaths, string fullAppName)
         {
-            var dict = new Dictionary<string, object>();
-            void RecurseChildren(IEnumerable<IConfigurationSection> children, string prefix = "")
+            if (packagedRoot is null)
             {
-                foreach (var child in children)
-                {
-                    var key = string.IsNullOrEmpty(prefix) ? child.Key : $"{prefix}:{child.Key}";
-
-                    if (child.Value == null && child.GetChildren().Any())
-                    {
-                        // This is a section node with children
-                        RecurseChildren(child.GetChildren(), key);
-                    }
-                    else
-                    {
-                        // This is a value node
-                        dict[key] = child.Value;
-                    }
-                }
+                throw new ArgumentNullException(nameof(packagedRoot));
             }
 
-            RecurseChildren(config.GetChildren());
-            return dict;
+            if (overwritePaths is null)
+            {
+                overwritePaths = Array.Empty<string>();
+            }
+
+            var overwriteSet = overwritePaths as HashSet<string> ?? new HashSet<string>(overwritePaths, StringComparer.OrdinalIgnoreCase);
+
+            JsonObject result;
+            if (userRoot is not null)
+            {
+                result = userRoot.DeepClone() as JsonObject ?? new JsonObject();
+                MergeJsonObject(result, packagedRoot, overwriteSet);
+            }
+            else
+            {
+                result = packagedRoot.DeepClone() as JsonObject ?? new JsonObject();
+            }
+
+            SetAppName(result, fullAppName);
+            SetAppId(result);
+
+            return result;
         }
 
-        // Helper to convert dictionary back to key-value pairs for ConfigurationBuilder
-        private static IEnumerable<KeyValuePair<string, string>> ConvertToKeyValuePairs(Dictionary<string, object> dict)
+        private static void MergeJsonObject(JsonObject target, JsonObject source, HashSet<string> overwritePaths, string currentPath = "")
         {
-            foreach (var kvp in dict)
+            foreach (var property in source)
             {
-                yield return new KeyValuePair<string, string>(kvp.Key, kvp.Value?.ToString());
+                var key = property.Key;
+                var sourceValue = property.Value;
+                var path = string.IsNullOrEmpty(currentPath) ? key : $"{currentPath}:{key}";
+
+                if (overwritePaths.Contains(path))
+                {
+                    target[key] = sourceValue?.DeepClone();
+                    continue;
+                }
+
+                if (!target.TryGetPropertyValue(key, out var targetValue) || targetValue is null)
+                {
+                    target[key] = sourceValue?.DeepClone();
+                    continue;
+                }
+
+                if (targetValue is JsonObject targetObject && sourceValue is JsonObject sourceObject)
+                {
+                    MergeJsonObject(targetObject, sourceObject, overwritePaths, path);
+                }
+                // For arrays or value types we leave the user's existing value unless explicitly overwritten.
             }
+        }
+
+        private static IConfigurationRoot BuildConfigurationFromJson(string json)
+        {
+            return new ConfigurationBuilder()
+                .AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(json)))
+                .Build();
         }
     }
 }

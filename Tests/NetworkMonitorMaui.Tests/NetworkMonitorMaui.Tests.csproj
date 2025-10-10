@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.Maui.Graphics" Version="9.0.110" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +42,7 @@
     <Compile Include="../../ViewModels/ScanProcessorStatesViewModel.cs" Link="ViewModels/ScanProcessorStatesViewModel.cs" />
     <Compile Include="../../ViewModels/EventToCommandBehavior.cs" Link="ViewModels/EventToCommandBehavior.cs" />
     <Compile Include="../../Controls/IColorResource.cs" Link="Controls/IColorResource.cs" />
+    <Compile Include="../../Helpers/MauiProgramHelper.cs" Link="Helpers/MauiProgramHelper.cs" />
   </ItemGroup>
 
   <ItemGroup>
