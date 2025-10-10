@@ -9,78 +9,138 @@ using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using NetworkMonitor.Utils;
 using NetworkMonitor.Api.Services;
+using System.Linq;
+using System.Threading;
+using NetworkMonitor.Maui.Services;
+
 namespace NetworkMonitor.Maui.ViewModels
 {
     public class ScanProcessorStatesViewModel : BasePopupViewModel
     {
-        private readonly ILocalCmdProcessorStates _cmdProcessorStates;
+        // Make states nullable until Initialize is called
+        private ILocalCmdProcessorStates? _cmdProcessorStates;
         private readonly ILogger _logger;
         private readonly IApiService _apiService;
-        public ObservableCollection<string> EndpointTypes { get; set; }
+        private readonly ICmdProcessorProvider _cmdProcessorProvider;
+        private readonly NetConnectConfig _netConfig;
+        private readonly IUiDispatcher _dispatcher;
+
+        // initialization guard
+        private int _initialized = 0;
+        private readonly object _initLock = new();
+
+        public ObservableCollection<string> EndpointTypes { get; set; } = new ObservableCollection<string>();
+
         public ObservableCollection<NetworkInterfaceInfo> NetworkInterfaces =>
-           new ObservableCollection<NetworkInterfaceInfo>(_cmdProcessorStates.AvailableNetworkInterfaces);
-        public string RunningMessage => _cmdProcessorStates.RunningMessage;
-        public string CompletedMessage => _cmdProcessorStates.CompletedMessage;
-        public NetworkInterfaceInfo SelectedNetworkInterface
+           new ObservableCollection<NetworkInterfaceInfo>(_cmdProcessorStates?.AvailableNetworkInterfaces ?? Enumerable.Empty<NetworkInterfaceInfo>());
+
+        public string RunningMessage => _cmdProcessorStates?.RunningMessage ?? string.Empty;
+        public string CompletedMessage => _cmdProcessorStates?.CompletedMessage ?? string.Empty;
+
+        public NetworkInterfaceInfo? SelectedNetworkInterface
         {
-            get => _cmdProcessorStates.SelectedNetworkInterface;
+            get => _cmdProcessorStates?.SelectedNetworkInterface;
             set
             {
-                _cmdProcessorStates.SelectedNetworkInterface = value;
+                if (_cmdProcessorStates == null) return;
+                _cmdProcessorStates.SelectedNetworkInterface = value!;
                 OnPropertyChanged();
             }
         }
 
-
-        public ScanProcessorStatesViewModel(ILogger<ScanProcessorStatesViewModel> logger, ICmdProcessorProvider cmdProcessorProvider, IApiService apiService,NetConnectConfig netConfig)
+        // Constructor now lightweight: store dependencies but do NOT call provider methods here.
+        // Follows ExitPageViewModel pattern: optional dispatcher parameter, fallback to ServiceInitializer.Dispatcher
+        public ScanProcessorStatesViewModel(
+            ILogger<ScanProcessorStatesViewModel> logger,
+            ICmdProcessorProvider cmdProcessorProvider,
+            IApiService apiService,
+            NetConnectConfig netConfig,
+            IUiDispatcher? dispatcher = null)
         {
             try
             {
                 _logger = logger;
-                _cmdProcessorStates = cmdProcessorProvider.GetProcessorStates("Nmap");
-                _cmdProcessorStates.EndpointTypes = netConfig.EndpointTypes;
-                _cmdProcessorStates.UseDefaultEndpointType = netConfig.UseDefaultEndpointType;
-                _cmdProcessorStates.DefaultEndpointType = netConfig.DefaultEndpointType;
+                _cmdProcessorProvider = cmdProcessorProvider;
                 _apiService = apiService;
-                _cmdProcessorStates.PropertyChanged += OnProcessorStatesChanged;
-                EndpointTypes = new ObservableCollection<string>(_cmdProcessorStates.EndpointTypes);
-                LoadNetworkInterfaces();
-
+                _netConfig = netConfig;
+                _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
+                // keep EndpointTypes non-null for bindings
+                EndpointTypes = new ObservableCollection<string>();
+                // Do not fetch processor states here — call Initialize later when the app is ready.
             }
             catch (Exception ex)
             {
-                _logger?.LogError($"Error initializing ScanProcessorStatesViewModel: {ex}");
+                _logger?.LogError($"Error initializing ScanProcessorStatesViewModel (ctor): {ex}");
             }
-
-
         }
 
-        public List<MonitorIP> SelectedDevices => _cmdProcessorStates.SelectedDevices?.ToList() ?? new List<MonitorIP>();
+        // Public, idempotent initializer. Safe to call multiple times.
+        public void Initialize()
+        {
+            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 1)
+            {
+                // already initialized
+                return;
+            }
+
+            lock (_initLock)
+            {
+                try
+                {
+                    _cmdProcessorStates = _cmdProcessorProvider.GetProcessorStates("Nmap");
+                    if (_cmdProcessorStates == null)
+                    {
+                        _logger?.LogWarning("CmdProcessorProvider returned null for 'Nmap'. Initialization deferred or not available.");
+                        return;
+                    }
+
+                    _cmdProcessorStates.EndpointTypes = _netConfig.EndpointTypes ?? new List<string>();
+                    _cmdProcessorStates.UseDefaultEndpointType = _netConfig.UseDefaultEndpointType;
+                    _cmdProcessorStates.DefaultEndpointType = _netConfig.DefaultEndpointType;
+                    _cmdProcessorStates.PropertyChanged += OnProcessorStatesChanged;
+
+                    EndpointTypes = new ObservableCollection<string>(_cmdProcessorStates.EndpointTypes ?? Enumerable.Empty<string>());
+                    OnPropertyChanged(nameof(EndpointTypes));
+
+                    LoadNetworkInterfaces();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError($"Error initializing ScanProcessorStatesViewModel (Initialize): {ex}");
+                }
+            }
+        }
+
+        public List<MonitorIP> SelectedDevices => _cmdProcessorStates?.SelectedDevices?.ToList() ?? new List<MonitorIP>();
+
         public void LoadNetworkInterfaces()
         {
             if (_cmdProcessorStates != null)
             {
                 _cmdProcessorStates.AvailableNetworkInterfaces = NetworkUtils.GetSuitableNetworkInterfaces(_logger, _cmdProcessorStates);
-                if (_cmdProcessorStates.AvailableNetworkInterfaces != null && _cmdProcessorStates.AvailableNetworkInterfaces.Count > 0) _cmdProcessorStates.SelectedNetworkInterface = _cmdProcessorStates.AvailableNetworkInterfaces.First();
-
+                if (_cmdProcessorStates.AvailableNetworkInterfaces != null && _cmdProcessorStates.AvailableNetworkInterfaces.Count > 0)
+                    _cmdProcessorStates.SelectedNetworkInterface = _cmdProcessorStates.AvailableNetworkInterfaces.First();
             }
-
         }
+
         public async Task Scan()
         {
+            if (_cmdProcessorStates == null) return;
             IsPopupVisible = true;
             await _cmdProcessorStates.Scan();
         }
         public async Task Cancel()
         {
+            if (_cmdProcessorStates == null) return;
             await _cmdProcessorStates.Cancel();
         }
 
         public string DefaultEndpointType
         {
-            get => _cmdProcessorStates.DefaultEndpointType;
+            get => _cmdProcessorStates?.DefaultEndpointType ?? string.Empty;
             set
             {
+                if (_cmdProcessorStates == null) return;
                 _cmdProcessorStates.DefaultEndpointType = value;
                 OnPropertyChanged();
             }
@@ -88,27 +148,30 @@ namespace NetworkMonitor.Maui.ViewModels
 
         public bool UseDefaultEndpointType
         {
-            get => _cmdProcessorStates.UseDefaultEndpointType;
+            get => _cmdProcessorStates?.UseDefaultEndpointType ?? false;
             set
             {
+                if (_cmdProcessorStates == null) return;
                 _cmdProcessorStates.UseDefaultEndpointType = value;
                 OnPropertyChanged();
             }
         }
         public bool UseFastScan
         {
-            get => _cmdProcessorStates.UseFastScan;
+            get => _cmdProcessorStates?.UseFastScan ?? false;
             set
             {
+                if (_cmdProcessorStates == null) return;
                 _cmdProcessorStates.UseFastScan = value;
                 OnPropertyChanged();
             }
         }
         public bool LimitPorts
         {
-            get => _cmdProcessorStates.LimitPorts;
+            get => _cmdProcessorStates?.LimitPorts ?? false;
             set
             {
+                if (_cmdProcessorStates == null) return;
                 _cmdProcessorStates.LimitPorts = value;
                 OnPropertyChanged();
             }
@@ -116,15 +179,23 @@ namespace NetworkMonitor.Maui.ViewModels
 
         private void OnProcessorStatesChanged(object? sender, PropertyChangedEventArgs e)
         {
-            MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        OnPropertyChanged(e.PropertyName);
+            try
+            {
+                // Use dispatcher pattern from ExitPageViewModel to marshal updates to UI thread
+                _dispatcher.Dispatch(() =>
+                {
+                    OnPropertyChanged(e.PropertyName);
 
-                        if (IsPopupVisible)
-                        {
-                            UpdatePopupMessage(e.PropertyName);
-                        }
-                    });
+                    if (IsPopupVisible)
+                    {
+                        UpdatePopupMessage(e.PropertyName);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error dispatching processor state change");
+            }
         }
 
         private void UpdatePopupMessage(string? propertyName)
@@ -133,41 +204,41 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 case nameof(RunningMessage):
                     PopupMessage = $"{RunningMessage}\n{CompletedMessage}";
-
                     break;
                 case nameof(CompletedMessage):
                     PopupMessage = $"{RunningMessage}\n{CompletedMessage}";
-
                     break;
             }
         }
+
         public async Task<List<MonitorIP>> ScanForHosts()
         {
-            // Reset any previous state
+            if (_cmdProcessorStates == null) return new List<MonitorIP>();
             IsPopupVisible = true;
             await _cmdProcessorStates.Scan();
-
-            // Return the detected hosts
             return _cmdProcessorStates.ActiveDevices.ToList();
         }
 
         public async Task AddServices()
         {
+            if (_cmdProcessorStates == null) return;
             await _cmdProcessorStates.AddServices();
         }
 
         public void AddSelectedHosts(List<MonitorIP> selectedServices)
         {
+            if (_cmdProcessorStates == null) return;
             _cmdProcessorStates.SelectedDevices.Clear();
             foreach (var service in selectedServices)
             {
                 _cmdProcessorStates.SelectedDevices.Add(service);
             }
-            //IsPopupVisible = false;
         }
+
         public async Task CheckServices()
         {
-            // Convert the selected devices to a list of IConnectionObject (HostObject)
+            if (_cmdProcessorStates == null) return;
+
             var connectionObjects = new List<IConnectionObject>();
 
             foreach (var device in _cmdProcessorStates.SelectedDevices)
@@ -177,30 +248,28 @@ namespace NetworkMonitor.Maui.ViewModels
                 {
                     hostObject = new QuantumHostObject
                     {
-                        Address = device.Address ?? "NoHostFound", // Assuming MonitorIP has a property IPAddress
-                        Port = device.Port,         // Assuming MonitorIP has a property Port
-                        Timeout = 10000             // Default timeout, can be customized
+                        Address = device.Address ?? "NoHostFound",
+                        Port = device.Port,
+                        Timeout = 10000
                     };
                 }
                 else
                 {
                     hostObject = new HostObject
                     {
-                        Address = device.Address ?? "NoHostFound", // Assuming MonitorIP has a property IPAddress
-                        Port = device.Port,         // Assuming MonitorIP has a property Port
-                        Timeout = 59000,             // Default timeout, can be customized
+                        Address = device.Address ?? "NoHostFound",
+                        Port = device.Port,
+                        Timeout = 59000,
                         EndPointType = device.EndPointType ?? "icmp"
                     };
                 }
 
-
                 connectionObjects.Add(hostObject);
             }
 
-            // Use the ApiService to check the connections
             var results = await _apiService.CheckConnections(connectionObjects);
             _cmdProcessorStates.CompletedMessage += "\n\nChecking status of selected services...\n\n";
-            // Handle the results (e.g., display them or log them)
+
             foreach (var result in results)
             {
                 string message = "No Data in results";
@@ -219,8 +288,6 @@ namespace NetworkMonitor.Maui.ViewModels
                 }
                 _cmdProcessorStates.CompletedMessage += message;
             }
-
-            // Update the UI or state based on results, if necessary
         }
     }
 

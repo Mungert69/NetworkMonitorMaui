@@ -18,6 +18,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private readonly IPlatformService _platformService;
         private readonly ILogger _logger;
         private readonly IAuthService _authService;
+        private readonly IUiDispatcher _dispatcher;
         private CancellationTokenSource? _pollingCts;
         private bool _isServiceStarted;
         private bool _disableAgentOnServiceShutdown;
@@ -55,13 +56,14 @@ namespace NetworkMonitor.Maui.ViewModels
 
         public List<TaskItem> Tasks => _tasks;
 
-        public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger<MainPageViewModel> logger, IAuthService authService)
+        // Add optional dispatcher parameter and follow ExitPageViewModel pattern
+        public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger<MainPageViewModel> logger, IAuthService authService, IUiDispatcher? dispatcher = null)
         {
             _netConfig = netConfig;
             _platformService = platformService;
             _logger = logger;
             _authService = authService;
-
+            _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
 
             if (_platformService != null)
             {
@@ -89,7 +91,15 @@ namespace NetworkMonitor.Maui.ViewModels
 
         private void OnPlatformServiceStateChanged(object? sender, EventArgs e)
         {
-            MainThread.BeginInvokeOnMainThread(UpdateFromPlatformService);
+            // Use dispatcher to marshal to UI thread
+            try
+            {
+                _dispatcher.Dispatch(UpdateFromPlatformService);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error dispatching platform service state change");
+            }
         }
 
         private void UpdateFromPlatformService()
@@ -282,7 +292,8 @@ namespace NetworkMonitor.Maui.ViewModels
             }
             try
             {
-                MainThread.BeginInvokeOnMainThread(() =>
+                // Use dispatcher to marshal UI updates
+                _dispatcher.Dispatch(() =>
                 {
                     switch (e.PropertyName)
                     {
