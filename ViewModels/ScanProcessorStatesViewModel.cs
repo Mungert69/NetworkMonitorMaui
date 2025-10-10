@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NetworkMonitor.Objects;
@@ -15,7 +16,7 @@ namespace NetworkMonitor.Maui.ViewModels
 {
     public class ScanProcessorStatesViewModel : BasePopupViewModel
     {
-        private readonly NetConnectConfig _netConfig;
+        private readonly NetConnectConfig? _netConfig;
         private readonly ILocalCmdProcessorStates _cmdProcessorStates;
         private readonly ILogger _logger;
         private readonly IApiService _apiService;
@@ -44,10 +45,17 @@ namespace NetworkMonitor.Maui.ViewModels
                 _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
                 _netConfig = netConfig;
                 _cmdProcessorStates = cmdProcessorProvider.GetProcessorStates("Nmap");
+                EndpointTypes = new ObservableCollection<string>();
+
+                if (_cmdProcessorStates == null)
+                {
+                    _logger?.LogError("GetProcessorStates(\"Nmap\") returned null.");
+                    return;
+                }
+
                 ApplyConfiguration();
                 _apiService = apiService;
                 _cmdProcessorStates.PropertyChanged += OnProcessorStatesChanged;
-                EndpointTypes = new ObservableCollection<string>(_cmdProcessorStates.EndpointTypes);
                 LoadNetworkInterfaces();
 
             }
@@ -185,14 +193,29 @@ namespace NetworkMonitor.Maui.ViewModels
 
         private void ApplyConfiguration()
         {
-            _cmdProcessorStates.EndpointTypes = _netConfig.EndpointTypes ?? new List<string>();
-            _cmdProcessorStates.UseDefaultEndpointType = _netConfig.UseDefaultEndpointType;
-            _cmdProcessorStates.DefaultEndpointType = string.IsNullOrWhiteSpace(_netConfig.DefaultEndpointType)
-                ? _cmdProcessorStates.EndpointTypes.FirstOrDefault() ?? string.Empty
-                : _netConfig.DefaultEndpointType;
+            if (_cmdProcessorStates == null)
+            {
+                _logger?.LogWarning("ApplyConfiguration called before _cmdProcessorStates is initialised.");
+                return;
+            }
 
+            if (_netConfig == null)
+            {
+                _logger?.LogWarning("NetConnectConfig is null; using existing processor state values.");
+            }
+
+            var endpointTypes = _netConfig?.EndpointTypes ?? _cmdProcessorStates.EndpointTypes ?? new List<string>();
+            _cmdProcessorStates.EndpointTypes = endpointTypes;
+            _cmdProcessorStates.UseDefaultEndpointType = _netConfig?.UseDefaultEndpointType ?? _cmdProcessorStates.UseDefaultEndpointType;
+
+            var defaultEndpointType = _netConfig?.DefaultEndpointType;
+            _cmdProcessorStates.DefaultEndpointType = string.IsNullOrWhiteSpace(defaultEndpointType)
+                ? _cmdProcessorStates.EndpointTypes.FirstOrDefault() ?? string.Empty
+                : defaultEndpointType;
+
+            EndpointTypes ??= new ObservableCollection<string>();
             EndpointTypes.Clear();
-            foreach (var endpoint in _cmdProcessorStates.EndpointTypes)
+            foreach (var endpoint in _cmdProcessorStates.EndpointTypes ?? new List<string>())
             {
                 EndpointTypes.Add(endpoint);
             }
