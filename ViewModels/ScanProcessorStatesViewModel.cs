@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NetworkMonitor.Objects;
@@ -14,6 +15,7 @@ namespace NetworkMonitor.Maui.ViewModels
 {
     public class ScanProcessorStatesViewModel : BasePopupViewModel
     {
+        private readonly NetConnectConfig _netConfig;
         private readonly ILocalCmdProcessorStates _cmdProcessorStates;
         private readonly ILogger _logger;
         private readonly IApiService _apiService;
@@ -40,10 +42,9 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 _logger = logger;
                 _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
+                _netConfig = netConfig;
                 _cmdProcessorStates = cmdProcessorProvider.GetProcessorStates("Nmap");
-                _cmdProcessorStates.EndpointTypes = netConfig.EndpointTypes;
-                _cmdProcessorStates.UseDefaultEndpointType = netConfig.UseDefaultEndpointType;
-                _cmdProcessorStates.DefaultEndpointType = netConfig.DefaultEndpointType;
+                ApplyConfiguration();
                 _apiService = apiService;
                 _cmdProcessorStates.PropertyChanged += OnProcessorStatesChanged;
                 EndpointTypes = new ObservableCollection<string>(_cmdProcessorStates.EndpointTypes);
@@ -64,7 +65,17 @@ namespace NetworkMonitor.Maui.ViewModels
             if (_cmdProcessorStates != null)
             {
                 _cmdProcessorStates.AvailableNetworkInterfaces = NetworkUtils.GetSuitableNetworkInterfaces(_logger, _cmdProcessorStates);
-                if (_cmdProcessorStates.AvailableNetworkInterfaces != null && _cmdProcessorStates.AvailableNetworkInterfaces.Count > 0) _cmdProcessorStates.SelectedNetworkInterface = _cmdProcessorStates.AvailableNetworkInterfaces.First();
+                if (_cmdProcessorStates.AvailableNetworkInterfaces != null && _cmdProcessorStates.AvailableNetworkInterfaces.Count > 0)
+                {
+                    if (_cmdProcessorStates.SelectedNetworkInterface == null ||
+                        !_cmdProcessorStates.AvailableNetworkInterfaces.Contains(_cmdProcessorStates.SelectedNetworkInterface))
+                    {
+                        _cmdProcessorStates.SelectedNetworkInterface = _cmdProcessorStates.AvailableNetworkInterfaces.First();
+                    }
+                }
+
+                OnPropertyChanged(nameof(NetworkInterfaces));
+                OnPropertyChanged(nameof(SelectedNetworkInterface));
 
             }
 
@@ -123,6 +134,12 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 OnPropertyChanged(e.PropertyName);
 
+                if (e.PropertyName == nameof(_cmdProcessorStates.AvailableNetworkInterfaces))
+                {
+                    OnPropertyChanged(nameof(NetworkInterfaces));
+                    OnPropertyChanged(nameof(SelectedNetworkInterface));
+                }
+            
                 if (IsPopupVisible)
                 {
                     UpdatePopupMessage(e.PropertyName);
@@ -157,6 +174,30 @@ namespace NetworkMonitor.Maui.ViewModels
         public async Task AddServices()
         {
             await _cmdProcessorStates.AddServices();
+        }
+
+        public void Refresh()
+        {
+            ApplyConfiguration();
+            LoadNetworkInterfaces();
+        }
+
+        private void ApplyConfiguration()
+        {
+            _cmdProcessorStates.EndpointTypes = _netConfig.EndpointTypes ?? new List<string>();
+            _cmdProcessorStates.UseDefaultEndpointType = _netConfig.UseDefaultEndpointType;
+            _cmdProcessorStates.DefaultEndpointType = string.IsNullOrWhiteSpace(_netConfig.DefaultEndpointType)
+                ? _cmdProcessorStates.EndpointTypes.FirstOrDefault() ?? string.Empty
+                : _netConfig.DefaultEndpointType;
+
+            EndpointTypes.Clear();
+            foreach (var endpoint in _cmdProcessorStates.EndpointTypes)
+            {
+                EndpointTypes.Add(endpoint);
+            }
+
+            OnPropertyChanged(nameof(DefaultEndpointType));
+            OnPropertyChanged(nameof(UseDefaultEndpointType));
         }
 
         public void AddSelectedHosts(List<MonitorIP> selectedServices)
