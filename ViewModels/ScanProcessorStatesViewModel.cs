@@ -22,7 +22,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private readonly IUiDispatcher _dispatcher;
         public ObservableCollection<string> EndpointTypes { get; set; }
         public ObservableCollection<NetworkInterfaceInfo> NetworkInterfaces =>
-           new ObservableCollection<NetworkInterfaceInfo>(_cmdProcessorStates.AvailableNetworkInterfaces);
+           new ObservableCollection<NetworkInterfaceInfo>(_cmdProcessorStates.AvailableNetworkInterfaces ?? new List<NetworkInterfaceInfo>());
         public string RunningMessage => _cmdProcessorStates.RunningMessage;
         public string CompletedMessage => _cmdProcessorStates.CompletedMessage;
         public NetworkInterfaceInfo SelectedNetworkInterface
@@ -64,8 +64,9 @@ namespace NetworkMonitor.Maui.ViewModels
         {
             if (_cmdProcessorStates != null)
             {
-                _cmdProcessorStates.AvailableNetworkInterfaces = NetworkUtils.GetSuitableNetworkInterfaces(_logger, _cmdProcessorStates);
-                if (_cmdProcessorStates.AvailableNetworkInterfaces != null && _cmdProcessorStates.AvailableNetworkInterfaces.Count > 0)
+                var interfaces = NetworkUtils.GetSuitableNetworkInterfaces(_logger, _cmdProcessorStates) ?? new List<NetworkInterfaceInfo>();
+                _cmdProcessorStates.AvailableNetworkInterfaces = interfaces;
+                if (_cmdProcessorStates.AvailableNetworkInterfaces.Count > 0)
                 {
                     if (_cmdProcessorStates.SelectedNetworkInterface == null ||
                         !_cmdProcessorStates.AvailableNetworkInterfaces.Contains(_cmdProcessorStates.SelectedNetworkInterface))
