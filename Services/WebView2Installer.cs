@@ -4,16 +4,18 @@ using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+#if WINDOWS
 using Microsoft.Web.WebView2.Core;
+#endif
 using Microsoft.Maui.Controls;
 
+#if WINDOWS
 namespace NetworkMonitor.Maui.Services
 {
     internal static class WebView2Installer
     {
         public static async Task EnsureWebView2Async()
         {
-#if WINDOWS
             try
             {
                 // If runtime is present this returns a non-empty version string
@@ -84,7 +86,6 @@ namespace NetworkMonitor.Maui.Services
                 // Fallback: open the official page so user can manually select installer
                 OpenUrl("https://developer.microsoft.com/microsoft-edge/webview2/#download-section");
             }
-#endif
         }
 
         static void OpenUrl(string url)
@@ -109,3 +110,4 @@ namespace NetworkMonitor.Maui.Services
         }
     }
 }
+#endif
