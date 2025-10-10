@@ -54,17 +54,25 @@ public class ScanProcessorStatesViewModelTests : ViewModelTestBase
     private static ScanProcessorStatesViewModel CreateViewModel(
         StubCmdProcessorStates states,
         NetConnectConfig config,
-        out Mock<ICmdProcessorProvider> providerMock)
+        out Mock<ICmdProcessorProvider> providerMock,
+        bool initialize = true)
     {
         providerMock = new Mock<ICmdProcessorProvider>();
         providerMock.Setup(p => p.GetProcessorStates("Nmap")).Returns(states);
         var apiServiceMock = new Mock<IApiService>();
 
-        return new ScanProcessorStatesViewModel(
+        var viewModel = new ScanProcessorStatesViewModel(
             GetLogger<ScanProcessorStatesViewModel>(),
             providerMock.Object,
             apiServiceMock.Object,
             config);
+
+        if (initialize)
+        {
+            viewModel.Initialize();
+        }
+
+        return viewModel;
     }
 
     [Fact]

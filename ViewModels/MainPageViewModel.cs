@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -28,10 +30,6 @@ namespace NetworkMonitor.Maui.ViewModels
         private bool _isPolling;
         private bool _showTasks = false;
         private List<TaskItem> _tasks;
-        private IColorResource ColorResource = ServiceInitializer.RootProvider.ColorResource;
-
-
-
         public bool ShowTasks
         {
             get => _showTasks;
@@ -517,7 +515,25 @@ pathStr="Scan";
     {
         private bool _isCompleted;
         public string TaskDescription { get; set; } = "";
-        private IColorResource ColorResource = ServiceInitializer.RootProvider.ColorResource;
+        private readonly IColorResource _colorResource;
+
+        public TaskItem(IColorResource? colorResource = null)
+        {
+            if (colorResource != null)
+            {
+                _colorResource = colorResource;
+                return;
+            }
+
+            try
+            {
+                _colorResource = ServiceInitializer.RootProvider.ColorResource;
+            }
+            catch (InvalidOperationException)
+            {
+                _colorResource = new FallbackColorResource();
+            }
+        }
 
         public string ButtonText => _isCompleted ? $"{TaskDescription ?? "Task"} (Completed)" : TaskDescription ?? "Task";
 
@@ -549,9 +565,9 @@ pathStr="Scan";
 
                     if (_isCompleted)
                     {
-                        if (ColorResource.GetRequestedTheme() == AppTheme.Dark)
+                        if (_colorResource.GetRequestedTheme() == AppTheme.Dark)
                         {
-                            color = ColorResource.GetResourceColor("Gray950");
+                            color = _colorResource.GetResourceColor("Gray950");
                         }
                         else
                         {
@@ -560,7 +576,7 @@ pathStr="Scan";
                     }
                     else
                     {
-                        color = ColorResource.GetResourceColor("Warning");
+                        color = _colorResource.GetResourceColor("Warning");
                     }
 
                     return color;
@@ -581,11 +597,11 @@ pathStr="Scan";
                 {
                     if (_isCompleted)
                     {
-                        color = ColorResource.GetResourceColor("Primary");
+                        color = _colorResource.GetResourceColor("Primary");
                     }
                     else
                     {
-                        if (ColorResource.GetRequestedTheme() == AppTheme.Dark)
+                        if (_colorResource.GetRequestedTheme() == AppTheme.Dark)
                         {
                             color = Colors.White;
                         }
@@ -622,5 +638,35 @@ pathStr="Scan";
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        private sealed class FallbackColorResource : IColorResource
+        {
+            private readonly Dictionary<string, Color> _colors = new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Warning"] = Colors.Yellow,
+                ["Primary"] = Colors.Blue,
+                ["Gray950"] = Colors.Black
+            };
+
+            public AppTheme GetRequestedTheme() => AppTheme.Light;
+
+            public Color GetResourceColor(string key) =>
+                _colors.TryGetValue(key, out var color) ? color : Colors.White;
+
+            public Color LightenColor(Color color, float factor)
+            {
+                factor = Math.Max(0, factor);
+                return new Color(
+                    (float)Math.Min(color.Red + factor, 1.0f),
+                    (float)Math.Min(color.Green + factor, 1.0f),
+                    (float)Math.Min(color.Blue + factor, 1.0f),
+                    (float)color.Alpha);
+            }
+
+            public void AnimateColor(BoxView boxView, Color fromColor, Color toColor, uint length)
+            {
+                boxView.Color = toColor;
+            }
+        }
     }
 }
