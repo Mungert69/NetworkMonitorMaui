@@ -84,6 +84,7 @@ namespace NetworkMonitor.Maui.ViewModels
             }
             if (_netConfig.IsChatMode) _tasks=GetChatModeTasks();
             else _tasks = GetStandardModeTasks();
+            ApplyAgentUserFlowToTasks();
 
         }
 
@@ -113,6 +114,10 @@ namespace NetworkMonitor.Maui.ViewModels
                 ? "The Agent is disabled"
                 : _platformService.ServiceMessage;
             ShowTasks = IsServiceStarted;
+            if (IsServiceStarted)
+            {
+                ApplyAgentUserFlowToTasks();
+            }
         }
 
         public List<TaskItem> GetTasks()
@@ -305,7 +310,7 @@ namespace NetworkMonitor.Maui.ViewModels
                             UpdateTaskCompletion("Scan for Hosts", _netConfig.AgentUserFlow.IsHostsAdded);
                             break;
                         case nameof(AgentUserFlow.IsChatOpened):
-                            UpdateTaskCompletion("Network Monitor Assistant", _netConfig.AgentUserFlow.IsChatOpened);
+                            UpdateTaskCompletion("Open Monitor Assistant", _netConfig.AgentUserFlow.IsChatOpened);
                             break;
                             
                     }
@@ -332,6 +337,33 @@ namespace NetworkMonitor.Maui.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError($"Error updating task completion for {taskDescription}: {ex.Message}");
+            }
+        }
+
+        private void ApplyAgentUserFlowToTasks()
+        {
+            if (_tasks == null || _netConfig?.AgentUserFlow == null)
+            {
+                return;
+            }
+
+            try
+            {
+                UpdateTaskCompletion("Authorize Agent", _netConfig.AgentUserFlow.IsAuthorized);
+                UpdateTaskCompletion("Login Quantum Network Monitor", _netConfig.AgentUserFlow.IsLoggedInWebsite);
+
+                if (_netConfig.IsChatMode)
+                {
+                    UpdateTaskCompletion("Open Monitor Assistant", _netConfig.AgentUserFlow.IsChatOpened);
+                }
+                else
+                {
+                    UpdateTaskCompletion("Scan for Hosts", _netConfig.AgentUserFlow.IsHostsAdded);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error applying AgentUserFlow state to tasks");
             }
         }
 
@@ -369,6 +401,7 @@ namespace NetworkMonitor.Maui.ViewModels
             var result = await OpenLoginWebsiteAsync();
             if (result.Success && !string.IsNullOrWhiteSpace(result.Message))
             {
+                _netConfig.AgentUserFlow.IsLoggedInWebsite = true;
                 OpenBrowserRequested?.Invoke(this, result.Message);
             }
             else
@@ -415,6 +448,7 @@ namespace NetworkMonitor.Maui.ViewModels
 
             if (result.Success)
             {
+                _netConfig.AgentUserFlow.IsAuthorized = true;
                 ShowAlertRequested?.Invoke(this, ("Success", $"Authorization successful! Now login and add hosts using '{MonitorLocation}' as the monitor location."));
             }
             else
