@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -220,6 +221,7 @@ namespace NetworkMonitor.Maui.ViewModels
                         break;
                     case nameof(NetConnectConfig.AuthKey):
                         OnPropertyChanged(nameof(AuthKey));
+                        OnPropertyChanged(nameof(AuthKeyDisplay));
                         break;
                     case nameof(NetConnectConfig.Owner):
                         OnPropertyChanged(nameof(Owner));
@@ -249,6 +251,30 @@ namespace NetworkMonitor.Maui.ViewModels
         public string OqsProviderPath => _netConfig.OqsProviderPath;
         public string ClientAuthUrl => _netConfig.ClientAuthUrl;
         public string AuthKey => _netConfig.AuthKey;
+        public string AuthKeyDisplay
+        {
+            get
+            {
+                try
+                {
+                    if (string.Equals(_netConfig.AuthKey, ".env", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var envValue = Environment.GetEnvironmentVariable("AuthKey");
+                        if (string.IsNullOrWhiteSpace(envValue))
+                        {
+                            return "(not set)";
+                        }
+                        return envValue;
+                    }
+                    return _netConfig.AuthKey;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to resolve AuthKeyDisplay");
+                    return _netConfig.AuthKey;
+                }
+            }
+        }
         public string Owner => _netConfig.Owner;
         public string MonitorLocation => _netConfig.MonitorLocation;
 
