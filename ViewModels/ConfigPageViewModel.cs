@@ -144,7 +144,7 @@ namespace NetworkMonitor.Maui.ViewModels
             finally
             {
                 _isResetting = false;
-                UpdateResetCommandCanExecute();
+               // UpdateResetCommandCanExecute();
             }
         }
 
