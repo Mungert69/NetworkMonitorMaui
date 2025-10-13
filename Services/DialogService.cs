@@ -13,7 +13,7 @@ public class DialogService : IDialogService
 
     public DialogService(IUiDispatcher? dispatcher = null)
     {
-        _dispatcher = dispatcher ?? throw new Exception("Fatal Error : Dispatcher is null");
+        _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
     }
 
     private Page? MainPage => Application.Current?.Windows[0].Page;
