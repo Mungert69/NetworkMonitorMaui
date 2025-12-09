@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
         <PropertyGroup>
-                <TargetFrameworks>net9.0-android</TargetFrameworks>
+                <TargetFrameworks>net10.0-android</TargetFrameworks>
                 <UseMaui>true</UseMaui>
                 <ImplicitUsings>enable</ImplicitUsings>
                 <Nullable>enable</Nullable>
                 <AssemblyName>NetworkMonitorMaui</AssemblyName>
                 <RootNamespace>NetworkMonitor.Maui</RootNamespace>
                 <!-- Display name -->
-                <ApplicationDisplayVersion>0.0.3</ApplicationDisplayVersion>
-                <ApplicationVersion>3</ApplicationVersion>
+                <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+                <ApplicationVersion>10</ApplicationVersion>
                 <DefineConstants>ANDROID</DefineConstants>
                 <AndroidSdkDirectory>/usr/lib/android-sdk</AndroidSdkDirectory>
                 <!--
@@ -27,16 +27,16 @@
 
 
 	<ItemGroup>
-		 <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
+		 <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.10" />
 
-                <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
-                <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.11" />
+                <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.1" />
+                <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
                 <PackageReference Include="CommunityToolkit.Maui" Version="11.2.0" />
                 <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-                  <PackageReference Include="Microsoft.AspNetCore.Components" Version="9.0.11" />
-                <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.11" />
-                <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.11" />
-                <PackageReference Include="Microsoft.JSInterop" Version="9.0.11" />
+                  <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.1" />
+                <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.1" />
+                <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.1" />
+                <PackageReference Include="Microsoft.JSInterop" Version="10.0.1" />
 
         </ItemGroup>
 	<ItemGroup>
