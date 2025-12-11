@@ -172,8 +172,8 @@ public class StatusIndicator : ContentView
         while (!token.IsCancellationRequested && IsUp && IsAnimated)
         {
             uint duration = CalculateAnimationDuration(RoundTripTimeAverage);
-            await _circle.ScaleTo(1.2, duration);
-            await _circle.ScaleTo(1.0, duration);
+            await _circle.ScaleToAsync(1.2, duration);
+            await _circle.ScaleToAsync(1.0, duration);
         }
     }
 
@@ -186,8 +186,8 @@ public class StatusIndicator : ContentView
         while (!token.IsCancellationRequested && IsUp && IsAnimated)
         {
             uint duration = CalculateRippleAnimationDuration(PacketsLostPercentage);
-            await _ripple.ScaleTo(scale, duration);
-            await _ripple.FadeTo(0, duration);
+            await _ripple.ScaleToAsync(scale, duration);
+            await _ripple.FadeToAsync(0, duration);
             _ripple.Scale = 1;
             _ripple.Opacity = 0.07;
         }

@@ -73,12 +73,12 @@ public class AgentIndicator : ContentView
         {
             // Scale up and lighten the color
             // ColorResource.AnimateColor(circle, originalColor, lighterColor, 500);
-            await circle.ScaleTo(1.0, 500);
+            await circle.ScaleToAsync(1.0, 500);
 
 
             // Scale down and return to the original color
             // ColorResource.AnimateColor(circle, lighterColor, originalColor, 500);
-            await circle.ScaleTo(0.9, 500);
+            await circle.ScaleToAsync(0.9, 500);
 
         }
     }

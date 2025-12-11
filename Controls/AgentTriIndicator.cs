@@ -68,8 +68,8 @@ namespace NetworkMonitor.Maui.Controls
         {
             while (ConnectState == ConnectState.Running)
             {
-                await circle.ScaleTo(1.0, 500);
-                await circle.ScaleTo(0.9, 500);
+                await circle.ScaleToAsync(1.0, 500);
+                await circle.ScaleToAsync(0.9, 500);
             }
         }
 
@@ -77,7 +77,7 @@ namespace NetworkMonitor.Maui.Controls
         {
             while (ConnectState == ConnectState.Waiting)
             {
-                await circle.ScaleTo(1.0, 2000);
+                await circle.ScaleToAsync(1.0, 2000);
                 await
 
     circle.ScaleTo(0.8, 2000);
