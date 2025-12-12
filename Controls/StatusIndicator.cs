@@ -12,6 +12,8 @@ public class StatusIndicator : ContentView
     private readonly BoxView _ripple;
     private CancellationTokenSource _animationCts;
     private IColorResource ColorResource = ServiceInitializer.RootProvider.ColorResource;
+    private readonly IUiDispatcher _dispatcher = ServiceInitializer.Dispatcher;
+    private bool _isLoaded = false;
 
     public static readonly BindableProperty IsUpProperty = BindableProperty.Create(
         nameof(IsUp), typeof(bool), typeof(StatusIndicator), default(bool), propertyChanged: OnIsUpChanged);
@@ -90,6 +92,22 @@ public class StatusIndicator : ContentView
         var tapGesture = new TapGestureRecognizer();
         tapGesture.Tapped += (s, e) => this.SendTapped();
         GestureRecognizers.Add(tapGesture);
+
+        Loaded += (_, __) =>
+        {
+            _isLoaded = true;
+            UpdateVisualState();
+        };
+    }
+
+    protected override void OnHandlerChanged()
+    {
+        base.OnHandlerChanged();
+        if (Handler != null && !_isLoaded)
+        {
+            _isLoaded = true;
+            UpdateVisualState();
+        }
     }
 
     private void SendTapped()
@@ -139,7 +157,18 @@ public class StatusIndicator : ContentView
 
     private void UpdateVisualState()
     {
+        if (_dispatcher.IsDispatchRequired)
+        {
+            _dispatcher.Dispatch(UpdateVisualState);
+            return;
+        }
+
         _circle.Color = IsUp ? ColorResource.GetResourceColor("Primary") : ColorResource.GetResourceColor("Error");
+
+        if (!_isLoaded)
+        {
+            return;
+        }
 
         if (!IsUp || !IsAnimated)
         {
@@ -153,6 +182,12 @@ public class StatusIndicator : ContentView
 
     private void StopAnimations()
     {
+        if (_dispatcher.IsDispatchRequired)
+        {
+            _dispatcher.Dispatch(StopAnimations);
+            return;
+        }
+
         _animationCts.Cancel();
         _circle.CancelAnimations();
         _ripple.CancelAnimations();
@@ -161,6 +196,12 @@ public class StatusIndicator : ContentView
 
     private void StartAnimations()
     {
+        if (_dispatcher.IsDispatchRequired)
+        {
+            _dispatcher.Dispatch(StartAnimations);
+            return;
+        }
+
         StopAnimations();
         var token = _animationCts.Token;
         _ = RunPulseAnimation(token);
@@ -169,27 +210,49 @@ public class StatusIndicator : ContentView
 
     private async Task RunPulseAnimation(CancellationToken token)
     {
-        while (!token.IsCancellationRequested && IsUp && IsAnimated)
+        try
         {
-            uint duration = CalculateAnimationDuration(RoundTripTimeAverage);
-            await _circle.ScaleToAsync(1.2, duration);
-            await _circle.ScaleToAsync(1.0, duration);
+            while (!token.IsCancellationRequested && IsUp && IsAnimated)
+            {
+                uint duration = CalculateAnimationDuration(RoundTripTimeAverage);
+                await _circle.ScaleToAsync(1.2, duration);
+                await _circle.ScaleToAsync(1.0, duration);
+                await Task.Delay(16, token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex);
         }
     }
 
     private async Task RunRippleAnimation(CancellationToken token)
     {
-        _ripple.Opacity = 0.07;
-        _ripple.Scale = 1;
-        double scale = CalculateRippleScale(PacketsLostPercentage);
-
-        while (!token.IsCancellationRequested && IsUp && IsAnimated)
+        try
         {
-            uint duration = CalculateRippleAnimationDuration(PacketsLostPercentage);
-            await _ripple.ScaleToAsync(scale, duration);
-            await _ripple.FadeToAsync(0, duration);
-            _ripple.Scale = 1;
             _ripple.Opacity = 0.07;
+            _ripple.Scale = 1;
+            double scale = CalculateRippleScale(PacketsLostPercentage);
+
+            while (!token.IsCancellationRequested && IsUp && IsAnimated)
+            {
+                uint duration = CalculateRippleAnimationDuration(PacketsLostPercentage);
+                await _ripple.ScaleToAsync(scale, duration);
+                await _ripple.FadeToAsync(0, duration);
+                _ripple.Scale = 1;
+                _ripple.Opacity = 0.07;
+                await Task.Delay(16, token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex);
         }
     }
 

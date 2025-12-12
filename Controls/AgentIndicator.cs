@@ -1,5 +1,7 @@
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Layouts;
+using System.Threading;
+using System.Threading.Tasks;
 using NetworkMonitor.Objects;
 using NetworkMonitor.Maui.Services;
 namespace NetworkMonitor.Maui.Controls;
@@ -8,6 +10,10 @@ public class AgentIndicator : ContentView
 
     private BoxView circle;
     private IColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+    private CancellationTokenSource _animationCts = new();
+    private readonly IUiDispatcher _dispatcher = ServiceInitializer.Dispatcher;
+    private bool _isLoaded = false;
+    private bool _pendingPulse = false;
 
     public static readonly BindableProperty IsUpProperty = BindableProperty.Create(
         nameof(IsUp), typeof(bool), typeof(AgentIndicator), default(bool), propertyChanged: OnIsUpChanged);
@@ -46,41 +52,97 @@ public class AgentIndicator : ContentView
         layout.Children.Add(circle);
 
         Content = layout;
+
+        Loaded += (_, __) =>
+        {
+            _isLoaded = true;
+            if (IsUp || _pendingPulse)
+            {
+                _pendingPulse = false;
+                UpdateVisualState();
+            }
+        };
+    }
+
+    protected override void OnHandlerChanged()
+    {
+        base.OnHandlerChanged();
+        if (Handler != null && !_isLoaded)
+        {
+            _isLoaded = true;
+            if (IsUp)
+            {
+                UpdateVisualState();
+            }
+        }
     }
 
     public void UpdateVisualState()
     {
+        if (_dispatcher.IsDispatchRequired)
+        {
+            _dispatcher.Dispatch(UpdateVisualState);
+            return;
+        }
 
         if (IsUp)
         {
             circle.Color = ColorResource.GetResourceColor("Primary");
+            if (!_isLoaded)
+            {
+                _pendingPulse = true;
+                return;
+            }
             StartPulsingAnimation();
         }
         else
         {
             circle.Color = ColorResource.GetResourceColor("Error");
-            circle.CancelAnimations();
+            StopPulsingAnimation();
         }
     }
 
 
     public async void StartPulsingAnimation()
     {
-        // Color originalColor = circle.Color;
-        //Color lighterColor = ColorResource.LightenColor(originalColor, 0.1f);
-        circle.CancelAnimations();
-        while (IsUp) // Continue animation while the indicator is up
+        if (_dispatcher.IsDispatchRequired)
         {
-            // Scale up and lighten the color
-            // ColorResource.AnimateColor(circle, originalColor, lighterColor, 500);
-            await circle.ScaleToAsync(1.0, 500);
-
-
-            // Scale down and return to the original color
-            // ColorResource.AnimateColor(circle, lighterColor, originalColor, 500);
-            await circle.ScaleToAsync(0.9, 500);
-
+            _dispatcher.Dispatch(StartPulsingAnimation);
+            return;
         }
+
+        StopPulsingAnimation();
+        var token = _animationCts.Token;
+        circle.CancelAnimations();
+
+        try
+        {
+            while (!token.IsCancellationRequested && IsUp)
+            {
+                await circle.ScaleToAsync(1.0, 500);
+                await circle.ScaleToAsync(0.9, 500);
+
+                // Guard against tight loops if animations complete synchronously.
+                await Task.Delay(16, token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected during state changes; swallow to avoid crashing from async-void.
+        }
+        catch (Exception ex)
+        {
+            // Never throw out of async-void on Android; swallow/log best-effort.
+            System.Diagnostics.Debug.WriteLine(ex);
+        }
+    }
+
+    private void StopPulsingAnimation()
+    {
+        try { _animationCts.Cancel(); } catch { }
+        circle.CancelAnimations();
+        _animationCts.Dispose();
+        _animationCts = new CancellationTokenSource();
     }
 
     

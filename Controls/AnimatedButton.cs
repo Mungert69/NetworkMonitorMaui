@@ -8,8 +8,18 @@ namespace NetworkMonitor.Maui.Controls
         {
             Clicked += async (sender, e) => 
             {
-                await this.ScaleToAsync(0.9, 50, Easing.Linear);
-                await this.ScaleToAsync(1, 50, Easing.Linear);
+                try
+                {
+                    await this.ScaleToAsync(0.9, 50, Easing.Linear);
+                    await this.ScaleToAsync(1, 50, Easing.Linear);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch
+                {
+                    // Ignore animation errors to avoid async-void crash on Android.
+                }
             };
         }
     }
