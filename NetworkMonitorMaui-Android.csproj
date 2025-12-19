@@ -43,7 +43,7 @@
 
         </ItemGroup>
         <ItemGroup>
-                <ProjectReference Include="..\NetworkMonitorProcessor\NetworkMonitorProcessor-Maui-Android.csproj" />
+                <ProjectReference Include="..\NetworkMonitorProcessorAgent\NetworkMonitorProcessor-Maui-Android.csproj" />
                 <ProjectReference Include="..\NetworkMonitorLib\NetworkMonitor-Maui-Android.csproj" />
         </ItemGroup>
 
