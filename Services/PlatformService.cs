@@ -2,13 +2,19 @@
 using Android.Content;
 using Android.OS;
 using Android.Provider;
+using Android.Content.PM;
+using AndroidX.Core.App;
+using AndroidX.Core.Content;
+using Android;
 #endif
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NetworkMonitor.Objects;
 using NetworkMonitor.Service.Services.OpenAI;
 using NetworkMonitor.Connection;
+using Microsoft.Maui.ApplicationModel;
 
 namespace NetworkMonitor.Maui.Services
 {
@@ -133,6 +139,7 @@ namespace NetworkMonitor.Maui.Services
     {
         private BroadcastReceiver _serviceStatusReceiver;
         private TaskCompletionSource<bool> _serviceOperationCompletionSource;
+        private const int BlePermissionRequestCode = 1201;
 
         public AndroidPlatformService( ILogger<PlatformService> logger, NetConnectConfig netConfig) : base( logger, netConfig)
         {
@@ -180,7 +187,7 @@ var powerService=Context.PowerService;
 
                 }
 
-                //return hasPermissions;
+                RequestBlePermissions();
                 return true;
             }
             catch (Exception ex)
@@ -188,6 +195,62 @@ var powerService=Context.PowerService;
                 _logger.LogError(ex, "Error requesting permissions in AndroidPlatformService");
                 return false;
             }
+        }
+
+        private void RequestBlePermissions()
+        {
+            if (Platform.CurrentActivity == null)
+            {
+                _logger.LogWarning("BLE permission request skipped: no current activity.");
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                try
+                {
+                    var activity = Platform.CurrentActivity;
+                    if (activity == null) return;
+
+                    var missing = new List<string>();
+
+                    if (Build.VERSION.SdkInt >= BuildVersionCodes.S)
+                    {
+                        if (ContextCompat.CheckSelfPermission(activity, Manifest.Permission.BluetoothScan) != Permission.Granted)
+                        {
+                            missing.Add(Manifest.Permission.BluetoothScan);
+                        }
+
+                        if (ContextCompat.CheckSelfPermission(activity, Manifest.Permission.BluetoothConnect) != Permission.Granted)
+                        {
+                            missing.Add(Manifest.Permission.BluetoothConnect);
+                        }
+                    }
+                    else
+                    {
+                        if (ContextCompat.CheckSelfPermission(activity, Manifest.Permission.AccessFineLocation) != Permission.Granted)
+                        {
+                            missing.Add(Manifest.Permission.AccessFineLocation);
+                        }
+
+                        if (ContextCompat.CheckSelfPermission(activity, Manifest.Permission.AccessCoarseLocation) != Permission.Granted)
+                        {
+                            missing.Add(Manifest.Permission.AccessCoarseLocation);
+                        }
+                    }
+
+                    if (missing.Count == 0) return;
+
+                    ActivityCompat.RequestPermissions(
+                        activity,
+                        missing.ToArray(),
+                        BlePermissionRequestCode);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error requesting BLE permissions.");
+                }
+            });
         }
 
         public override Task StartBackgroundService()
