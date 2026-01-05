@@ -238,6 +238,12 @@ namespace NetworkMonitor.Maui.ViewModels
         public async Task CheckServices()
         {
             if (_cmdProcessorStates == null) return;
+            if (_cmdProcessorStates.SelectedDevices == null || _cmdProcessorStates.SelectedDevices.Count == 0)
+            {
+                PopupMessage = "Select at least one host to check.";
+                IsPopupVisible = true;
+                return;
+            }
 
             var connectionObjects = new List<IConnectionObject>();
 
