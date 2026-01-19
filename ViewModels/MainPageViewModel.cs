@@ -142,7 +142,7 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 TaskDescription = $"Failed to setup tasks : {e.Message}",
                 IsCompleted = false,
-                TaskAction = () => { }
+                TaskAction = new Microsoft.Maui.Controls.Command(() => { })
             }
         };
             }
