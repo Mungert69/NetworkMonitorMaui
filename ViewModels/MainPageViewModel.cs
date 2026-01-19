@@ -82,7 +82,7 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 _logger.LogError("_netConfig.AgentUserFlow is null in MainPageViewModel constructor.");
             }
-            if (_netConfig.IsChatMode) _tasks=GetChatModeTasks();
+            if (_netConfig != null && _netConfig.IsChatMode) _tasks = GetChatModeTasks();
             else _tasks = GetStandardModeTasks();
             ApplyAgentUserFlowToTasks();
 
@@ -142,7 +142,7 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 TaskDescription = $"Failed to setup tasks : {e.Message}",
                 IsCompleted = false,
-                TaskAction = null
+                TaskAction = () => { }
             }
         };
             }
@@ -442,6 +442,7 @@ namespace NetworkMonitor.Maui.ViewModels
             _isPolling = true;
 
             ShowLoadingMessage?.Invoke(this, (true, true));
+            _pollingCts ??= new CancellationTokenSource();
             var result = await PollForTokenAsync(_pollingCts.Token);
             ShowLoadingMessage?.Invoke(this, (false, false));
             _isPolling = false;
