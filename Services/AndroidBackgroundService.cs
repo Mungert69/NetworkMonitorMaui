@@ -40,6 +40,7 @@ namespace NetworkMonitor.Maui.Services
         private IFileRepo _fileRepo;
         private IRootNamespaceProvider _rootProvider;
         private IProtectedConfigManager _protectedConfigManager;
+        private IAssetReadyService _assetReadyService;
         private NotificationManagerCompat _compatManager;
         private int messageId = 0;
         private string _channelName = "FreeNetworkMonitor";
@@ -80,12 +81,13 @@ namespace NetworkMonitor.Maui.Services
             _platformService = _rootProvider.ServiceProvider.GetRequiredService<IPlatformService>();
             _browserHost = _rootProvider.ServiceProvider.GetRequiredService<IBrowserHost>();
             _protectedConfigManager = _rootProvider.ServiceProvider.GetRequiredService<IProtectedConfigManager>();
+            _assetReadyService = _rootProvider.ServiceProvider.GetRequiredService<IAssetReadyService>();
         }
         private async Task StartAsync()
         {
             try
             {
-                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider, _connectProvider, _browserHost, _protectedConfigManager);
+                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider, _connectProvider, _browserHost, _protectedConfigManager, _assetReadyService);
                 var result = await _backgroundService.Start();
                 _platformService.OnUpdateServiceState(result, true);
 

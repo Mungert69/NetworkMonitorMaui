@@ -34,8 +34,9 @@ namespace NetworkMonitor.Maui.Services
         private IConnectProvider _connectProvider;
         private IBrowserHost? _browserHost;
         private IProtectedConfigManager _protectedConfigManager;
+        private IAssetReadyService _assetReadyService;
         private bool _isRunning = false;
-        public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider, IConnectProvider connectProvider, IBrowserHost browserHost, IProtectedConfigManager protectedConfigManager)
+        public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider, IConnectProvider connectProvider, IBrowserHost browserHost, IProtectedConfigManager protectedConfigManager, IAssetReadyService assetReadyService)
         {
             _logger = logger;
             _netConfig = netConfig;
@@ -48,6 +49,7 @@ namespace NetworkMonitor.Maui.Services
             _connectProvider = connectProvider;
             _browserHost = browserHost;
             _protectedConfigManager = protectedConfigManager;
+            _assetReadyService = assetReadyService;
 
         }
 
@@ -59,6 +61,7 @@ namespace NetworkMonitor.Maui.Services
             result.Message = " Background Service : Start : ";
             try
             {
+                await _assetReadyService.EnsureAssetsReadyAsync();
                 result = await _rabbitRepo.ConnectAndSetUp();
                 if (!result.Success)
                 {
