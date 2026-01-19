@@ -16,6 +16,9 @@ monitor state in the desktop/mobile apps.
 - Consumes `NetworkMonitorLib` types for command processors and shared objects.
 - Used by `QuantumSecure` (and similar MAUI shells) as the UI base.
 
+## Agent hosting
+The shared background service now wires both `CmdProcessorProvider` and `ConnectProvider` so dynamic command processors and periodic connect types can be managed at runtime.
+
 ## Build
 ```bash
 dotnet restore

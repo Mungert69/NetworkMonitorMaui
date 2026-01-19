@@ -31,10 +31,11 @@ namespace NetworkMonitor.Maui.Services
         private IMonitorPingInfoView _monitorPingInfoView;
         private LocalProcessorStates _processorStates;
         private ICmdProcessorProvider _cmdProcessorProvider;
+        private IConnectProvider _connectProvider;
         private IBrowserHost? _browserHost;
         private IProtectedConfigManager _protectedConfigManager;
         private bool _isRunning = false;
-        public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider, IBrowserHost browserHost, IProtectedConfigManager protectedConfigManager)
+        public BackgroundService(ILogger logger, NetConnectConfig netConfig, ILoggerFactory loggerFactory, IRabbitRepo rabbitRepo, IFileRepo fileRepo, LocalProcessorStates processorStates, IMonitorPingInfoView monitorPingInfoView, ICmdProcessorProvider cmdProcessorProvider, IConnectProvider connectProvider, IBrowserHost browserHost, IProtectedConfigManager protectedConfigManager)
         {
             _logger = logger;
             _netConfig = netConfig;
@@ -44,6 +45,7 @@ namespace NetworkMonitor.Maui.Services
             _monitorPingInfoView = monitorPingInfoView;
             _processorStates = processorStates;
             _cmdProcessorProvider = cmdProcessorProvider;
+            _connectProvider = connectProvider;
             _browserHost = browserHost;
             _protectedConfigManager = protectedConfigManager;
 
@@ -64,18 +66,19 @@ namespace NetworkMonitor.Maui.Services
                     return result;
                 }
                 var resultCmdProcessorFactory = await _cmdProcessorProvider.Setup();
-                var _connectFactory = new NetworkMonitor.Connection.ConnectFactory(_loggerFactory.CreateLogger<ConnectFactory>(), netConfig: _netConfig, _cmdProcessorProvider,_browserHost);
+                var resultConnectProvider = await _connectProvider.Setup();
+                var _connectFactory = new NetworkMonitor.Connection.ConnectFactory(_loggerFactory.CreateLogger<ConnectFactory>(), netConfig: _netConfig, _cmdProcessorProvider, _browserHost, _connectProvider);
 # if Android 
 
 # else
   _ = _connectFactory.SetupChromium(_netConfig);
 # endif
-                _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _protectedConfigManager,_monitorPingInfoView);
-                _rabbitListener = new RabbitListener(_monitorPingProcessor, _loggerFactory.CreateLogger<RabbitListener>(), _netConfig, _processorStates, _cmdProcessorProvider);
+                _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _protectedConfigManager, _monitorPingInfoView);
+                _rabbitListener = new RabbitListener(_monitorPingProcessor, _loggerFactory.CreateLogger<RabbitListener>(), _netConfig, _processorStates, _cmdProcessorProvider, _connectProvider);
                 var resultListener = await _rabbitListener.Setup();
                 var resultProcessor = await _monitorPingProcessor.Init(new ProcessorInitObj());
-                result.Message += resultCmdProcessorFactory.Message + resultListener.Message + resultProcessor.Message;
-                result.Success = resultCmdProcessorFactory.Success && resultProcessor.Success && resultListener.Success;
+                result.Message += resultCmdProcessorFactory.Message + resultConnectProvider.Message + resultListener.Message + resultProcessor.Message;
+                result.Success = resultCmdProcessorFactory.Success && resultConnectProvider.Success && resultProcessor.Success && resultListener.Success;
                 //result.Success = true;
             }
             catch (Exception e)

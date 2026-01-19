@@ -35,6 +35,7 @@ namespace NetworkMonitor.Maui.Services
         private IMonitorPingInfoView _monitorPingInfoView;
         private LocalProcessorStates _processorStates;
         private ICmdProcessorProvider _cmdProcessorProvider;
+        private IConnectProvider _connectProvider;
         private IPlatformService _platformService;
         private IFileRepo _fileRepo;
         private IRootNamespaceProvider _rootProvider;
@@ -75,6 +76,7 @@ namespace NetworkMonitor.Maui.Services
             _monitorPingInfoView = _rootProvider.ServiceProvider.GetRequiredService<IMonitorPingInfoView>();
             _processorStates = _rootProvider.ServiceProvider.GetRequiredService<LocalProcessorStates>();
             _cmdProcessorProvider = _rootProvider.ServiceProvider.GetRequiredService<ICmdProcessorProvider>();
+            _connectProvider = _rootProvider.ServiceProvider.GetRequiredService<IConnectProvider>();
             _platformService = _rootProvider.ServiceProvider.GetRequiredService<IPlatformService>();
             _browserHost = _rootProvider.ServiceProvider.GetRequiredService<IBrowserHost>();
             _protectedConfigManager = _rootProvider.ServiceProvider.GetRequiredService<IProtectedConfigManager>();
@@ -83,7 +85,7 @@ namespace NetworkMonitor.Maui.Services
         {
             try
             {
-                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider,_browserHost, _protectedConfigManager);
+                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider, _connectProvider, _browserHost, _protectedConfigManager);
                 var result = await _backgroundService.Start();
                 _platformService.OnUpdateServiceState(result, true);
 
