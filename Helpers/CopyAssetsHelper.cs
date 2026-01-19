@@ -21,6 +21,14 @@ namespace NetworkMonitor.Maui;
 
 public class CopyAssetsHelper
 {
+    private static readonly HashSet<string> AlwaysOverwriteAssets = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "AlgoTable.csv",
+        "curves",
+        "cert_oids",
+        "algo_info.json",
+        "update_cert_oids.sh"
+    };
 
 
     private static async Task<string> CopyAssetType(string assetType, bool setPerms, string directoryName, string[] assetFiles, string localPath, IProgress<string>? progress)
@@ -33,7 +41,10 @@ public class CopyAssetsHelper
 
             try
             {
-                if (File.Exists(localFilePath))
+                var fileName = Path.GetFileName(localFilePath);
+                var alwaysOverwrite = AlwaysOverwriteAssets.Contains(fileName);
+
+                if (File.Exists(localFilePath) && !alwaysOverwrite)
                 {
                     // Compare file size before copying
                     using var stream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
