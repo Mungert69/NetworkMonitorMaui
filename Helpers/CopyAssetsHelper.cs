@@ -23,7 +23,7 @@ public class CopyAssetsHelper
 {
 
 
-    private static async Task<string> CopyAssetType(string assetType, bool setPerms, string directoryName, string[] assetFiles, string localPath)
+    private static async Task<string> CopyAssetType(string assetType, bool setPerms, string directoryName, string[] assetFiles, string localPath, IProgress<string>? progress)
     {
         var outputStr = new StringBuilder();
         var copyTasks = assetFiles.Select(async assetFile =>
@@ -39,6 +39,7 @@ public class CopyAssetsHelper
                     using var stream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
                     if (new FileInfo(localFilePath).Length == stream.Length)
                     {
+                        progress?.Report($"Skipped {assetType}: {assetFile}");
                         return $"Skipped {assetType} file: {assetFile} (Already up-to-date)";
                     }
                 }
@@ -54,13 +55,16 @@ public class CopyAssetsHelper
                 if (setPerms && IsBinary(assetFile, out string binaryType))
                 {
                     SetExecutablePermission(localFilePath);
+                    progress?.Report($"Copied {binaryType}: {assetFile}");
                     return $"Permission set for {binaryType}: {localFilePath}";
                 }
 
+                progress?.Report($"Copied {assetType}: {assetFile}");
                 return $"Copied {assetType} file: {assetFile}";
             }
             catch (Exception e)
             {
+                progress?.Report($"Error copying {assetType}: {assetFile}");
                 return $"Error copying {assetType} file {assetFile}: {e.Message}";
             }
         });
@@ -73,7 +77,7 @@ public class CopyAssetsHelper
 
         return outputStr.ToString();
     }
-    public static async Task<string> CopyAssetsToLocalStorage(string assetDirectoryName, string csAssetDirectoryName, string dllAssetDirectoryName)
+    public static async Task<string> CopyAssetsToLocalStorage(string assetDirectoryName, string csAssetDirectoryName, string dllAssetDirectoryName, IProgress<string>? progress = null)
     {
         var outputStr = new StringBuilder();
 
@@ -90,7 +94,8 @@ public class CopyAssetsHelper
             string localPath = Path.Combine(FileSystem.AppDataDirectory, assetDir);
             Directory.CreateDirectory(localPath);
 
-            outputStr.Append(await CopyAssetType("asset", true, assetDirectoryName, assetFiles, localPath));
+            progress?.Report("Copying openssl assets...");
+            outputStr.Append(await CopyAssetType("asset", true, assetDirectoryName, assetFiles, localPath, progress));
 
 
             outputStr.AppendLine($"Directory copied to: {localPath}");
@@ -103,7 +108,8 @@ public class CopyAssetsHelper
             outputStr.Append(csListOutput);
             string csLocalPath = Path.Combine(FileSystem.AppDataDirectory, csAssetDir);
             Directory.CreateDirectory(csLocalPath);
-            outputStr.Append(await CopyAssetType("cs-asset", false, csAssetDirectoryName, csAssetFiles, csLocalPath));
+            progress?.Report("Copying command assets...");
+            outputStr.Append(await CopyAssetType("cs-asset", false, csAssetDirectoryName, csAssetFiles, csLocalPath, progress));
             outputStr.AppendLine($"Directory copied to: {csLocalPath}");
             outputStr.Append(ListCopiedFiles(csAssetDir));
 
@@ -117,7 +123,8 @@ public class CopyAssetsHelper
             outputStr.Append(dllListOutput);
             string dllLocalPath = Path.Combine(FileSystem.AppDataDirectory, dllAssetDir);
             Directory.CreateDirectory(dllLocalPath);
-            outputStr.Append(await CopyAssetType("dll", false, dllAssetDirectoryName, dllAssetFiles, dllLocalPath));
+            progress?.Report("Copying runtime libraries...");
+            outputStr.Append(await CopyAssetType("dll", false, dllAssetDirectoryName, dllAssetFiles, dllLocalPath, progress));
             outputStr.AppendLine($"Directory copied to: {dllLocalPath}");
             outputStr.Append(ListCopiedFiles(dllAssetDir));
 

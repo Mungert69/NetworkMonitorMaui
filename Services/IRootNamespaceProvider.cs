@@ -11,5 +11,6 @@ namespace NetworkMonitor.Maui.Services
         string GetAppDataDirectory();
         int GetDrawable(string drawableName);
         IColorResource ColorResource { get; }
+        bool AssetsReady { get; set; }
     }
 }
