@@ -58,12 +58,6 @@ namespace NetworkMonitor.Maui.Services
         {
             try
             {
-                if (!Geolocation.Default.IsSupported)
-                {
-                    context.HasGps = false;
-                    return;
-                }
-
                 var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>().ConfigureAwait(false);
                 if (status != PermissionStatus.Granted)
                 {

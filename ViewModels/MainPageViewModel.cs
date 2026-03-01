@@ -20,6 +20,7 @@ namespace NetworkMonitor.Maui.ViewModels
         private readonly IPlatformService _platformService;
         private readonly ILogger _logger;
         private readonly IAuthService _authService;
+        private readonly IDeviceContextService? _deviceContextService;
         private readonly IUiDispatcher _dispatcher;
         private CancellationTokenSource? _pollingCts;
         private bool _isServiceStarted;
@@ -55,12 +56,19 @@ namespace NetworkMonitor.Maui.ViewModels
         public List<TaskItem> Tasks => _tasks;
 
         // Add optional dispatcher parameter and follow ExitPageViewModel pattern
-        public MainPageViewModel(NetConnectConfig netConfig, IPlatformService platformService, ILogger<MainPageViewModel> logger, IAuthService authService, IUiDispatcher? dispatcher = null)
+        public MainPageViewModel(
+            NetConnectConfig netConfig,
+            IPlatformService platformService,
+            ILogger<MainPageViewModel> logger,
+            IAuthService authService,
+            IDeviceContextService? deviceContextService = null,
+            IUiDispatcher? dispatcher = null)
         {
             _netConfig = netConfig;
             _platformService = platformService;
             _logger = logger;
             _authService = authService;
+            _deviceContextService = deviceContextService;
             _dispatcher = dispatcher ?? ServiceInitializer.Dispatcher;
 
             if (_platformService != null)
@@ -238,12 +246,29 @@ namespace NetworkMonitor.Maui.ViewModels
                 // Trigger service state change
                 await ChangeServiceAsync(value);
 
+                if (value && IsServiceStarted && _deviceContextService != null)
+                {
+                    _ = RefreshDeviceContextAfterAgentStartAsync();
+                }
+
                 return IsServiceStarted; // Return actual service state
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error changing service state: {ex.Message}");
                 return false; // Indicate failure
+            }
+        }
+
+        private async Task RefreshDeviceContextAfterAgentStartAsync()
+        {
+            try
+            {
+                await _deviceContextService!.RefreshAndPersistAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Device context refresh after agent start failed.");
             }
         }
 
