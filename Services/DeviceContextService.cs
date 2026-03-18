@@ -43,7 +43,7 @@ namespace NetworkMonitor.Maui.Services
                 _netConfig.DeviceContext = context;
                 _netConfig.MonitorLocation = DeviceContextHelper.BuildMonitorLocation(context, _netConfig.MonitorLocation);
                 await _protectedConfigManager
-                    .SaveConfigurationAsync(_netConfig, ProtectedConfigurationParameters.All)
+                    .PersistAndSaveAsync(_netConfig, ProtectedConfigurationParameters.All)
                     .ConfigureAwait(false);
 
                 _logger.LogInformation("Refreshed and persisted device context. monitor_location={Location}", _netConfig.MonitorLocation);
