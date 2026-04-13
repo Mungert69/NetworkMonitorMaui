@@ -31,7 +31,7 @@ namespace NetworkMonitor.Maui.Services
         private NetConnectConfig _netConfig;
         private ILoggerFactory _loggerFactory;
         private IRabbitRepo _rabbitRepo;
-        private IBackgroundService _backgroundService;
+        private IBackgroundService? _backgroundService;
         private IMonitorPingInfoView _monitorPingInfoView;
         private LocalProcessorStates _processorStates;
         private ICmdProcessorProvider _cmdProcessorProvider;
@@ -48,6 +48,9 @@ namespace NetworkMonitor.Maui.Services
         private string _channelDescription = "Quantum Network Monitor Agent notification channel";
         private bool _channelInitialized = false;
         private IBrowserHost _browserHost;
+        private readonly object _lifecycleLock = new();
+        private Task<ResultObj>? _startTask;
+        private Task<ResultObj>? _stopTask;
 
         public const string ServiceBroadcastAction = "com.networkmonitor.service.STATUS";
         public const string ServiceStatusExtra = "ServiceStatus";
@@ -85,10 +88,31 @@ namespace NetworkMonitor.Maui.Services
         }
         private async Task StartAsync()
         {
+            Task<ResultObj> startTask;
             try
             {
-                _backgroundService = new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider, _connectProvider, _browserHost, _protectedConfigManager, _assetReadyService);
-                var result = await _backgroundService.Start();
+                lock (_lifecycleLock)
+                {
+                    if (_backgroundService?.IsRunning == true)
+                    {
+                        var alreadyRunning = new ResultObj
+                        {
+                            Success = true,
+                            Message = " Android Background Service : Start : Agent is already running."
+                        };
+                        _platformService.OnUpdateServiceState(alreadyRunning, true);
+                        return;
+                    }
+
+                    if (_startTask == null || _startTask.IsCompleted)
+                    {
+                        _backgroundService ??= new BackgroundService(_logger, _netConfig, _loggerFactory, _rabbitRepo, _fileRepo, _processorStates, _monitorPingInfoView, _cmdProcessorProvider, _connectProvider, _browserHost, _protectedConfigManager, _assetReadyService);
+                        _startTask = _backgroundService.Start();
+                    }
+                    startTask = _startTask;
+                }
+
+                var result = await startTask;
                 _platformService.OnUpdateServiceState(result, true);
 
             }
@@ -100,10 +124,41 @@ namespace NetworkMonitor.Maui.Services
 
         private async Task StopAsync()
         {
-             if (_backgroundService == null) return;
+            Task<ResultObj> stopTask;
             try
             {
-                var result = await _backgroundService.Stop();
+                lock (_lifecycleLock)
+                {
+                    if (_backgroundService == null)
+                    {
+                        var alreadyStopped = new ResultObj
+                        {
+                            Success = true,
+                            Message = " Android Background Service : Stop : Agent is already stopped."
+                        };
+                        _platformService.OnUpdateServiceState(alreadyStopped, false);
+                        StopSelf();
+                        return;
+                    }
+
+                    if (_stopTask == null || _stopTask.IsCompleted)
+                    {
+                        _stopTask = _backgroundService.Stop();
+                    }
+                    stopTask = _stopTask;
+                }
+
+                var result = await stopTask;
+                if (result.Success)
+                {
+                    lock (_lifecycleLock)
+                    {
+                        _backgroundService = null;
+                        _startTask = null;
+                        _stopTask = null;
+                    }
+                    StopSelf();
+                }
                 _platformService.OnUpdateServiceState(result, false);
             }
             catch (Exception ex)
@@ -146,13 +201,13 @@ namespace NetworkMonitor.Maui.Services
                     _ = StopAsync();
                     _logger.LogInformation($" SERVICE : StartCommand Stop Completed");
 
-                    return StartCommandResult.Sticky;
+                    return StartCommandResult.NotSticky;
                 }
                 catch (Exception e)
                 {
                     var result = new ResultObj() { Message = $" Error : Failed to Stop service . Error was : {e.Message}", Success = false };
                     _platformService.OnUpdateServiceState(result, false);
-                    return StartCommandResult.Sticky;
+                    return StartCommandResult.NotSticky;
                 }
             }
 
