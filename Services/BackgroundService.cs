@@ -89,11 +89,11 @@ namespace NetworkMonitor.Maui.Services
                     var resultCmdProcessorFactory = await _cmdProcessorProvider.Setup();
                     var resultConnectProvider = await _connectProvider.Setup();
                     var _connectFactory = new NetworkMonitor.Connection.ConnectFactory(_loggerFactory.CreateLogger<ConnectFactory>(), netConfig: _netConfig, _cmdProcessorProvider, _browserHost, _connectProvider);
-# if Android 
+#if ANDROID
 
-# else
+#else
                     _ = _connectFactory.SetupChromium(_netConfig);
-# endif
+#endif
                     _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _protectedConfigManager, _monitorPingInfoView);
                     _rabbitListener = new RabbitListener(_monitorPingProcessor, _loggerFactory.CreateLogger<RabbitListener>(), _netConfig, _processorStates, _cmdProcessorProvider, _connectProvider);
                     var resultListener = await _rabbitListener.Setup(startupToken);

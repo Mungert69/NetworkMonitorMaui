@@ -520,9 +520,6 @@ namespace NetworkMonitor.Maui.ViewModels
         public async Task<ResultObj> ScanHostsAsync()
         {
             string pathStr = "//Scan";
-# if Android
-pathStr="Scan";
-# endif
             // Return the navigation route
             return new ResultObj { Success = true, Message = pathStr };
         }
@@ -530,9 +527,6 @@ pathStr="Scan";
         private async Task<ResultObj> OpenAssistantAsync()
         {
             string pathStr = "//Chat";
-#if Android
-    pathStr = "Chat";
-#endif
             return new ResultObj { Success = true, Message = pathStr };
 
         }
