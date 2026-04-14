@@ -312,17 +312,17 @@ var powerService=Context.PowerService;
         {
                  try
             {
-                 IsServiceStarted = state;
                      // Update PlatformService properties
                     if (result.Success)
                     {
+                        IsServiceStarted = state;
                         ServiceMessage = IsServiceStarted ? "Started agent." : "Stopped agent.";
                         _logger.LogInformation(ServiceMessage);
                         _serviceOperationCompletionSource?.TrySetResult(true);
                     }
                     else
                     {
-                        var stateStr = IsServiceStarted ? "stop" : "start";
+                        var stateStr = state ? "start" : "stop";
                         ServiceMessage = $"Agent failed to {stateStr}: {result.Message}";
                         _logger.LogError(ServiceMessage);
                         _serviceOperationCompletionSource?.TrySetResult(false);
