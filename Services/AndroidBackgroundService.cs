@@ -41,7 +41,6 @@ namespace NetworkMonitor.Maui.Services
         private IRootNamespaceProvider _rootProvider;
         private IProtectedConfigManager _protectedConfigManager;
         private IAssetReadyService _assetReadyService;
-        private NotificationManagerCompat _compatManager;
         private int messageId = 0;
         private string _channelName = "FreeNetworkMonitor";
         private string _channelId = "fre_mon_channel";

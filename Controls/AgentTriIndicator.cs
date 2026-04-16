@@ -145,7 +145,7 @@ namespace NetworkMonitor.Maui.Controls
                 while (!token.IsCancellationRequested && ConnectState == ConnectState.Waiting)
                 {
                     await circle.ScaleToAsync(1.0, 2000);
-                    await circle.ScaleTo(0.8, 2000);
+                    await circle.ScaleToAsync(0.8, 2000);
                     await Task.Delay(16, token);
                 }
             }
