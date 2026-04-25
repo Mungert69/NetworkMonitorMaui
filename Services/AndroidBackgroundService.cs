@@ -14,7 +14,7 @@ using NetworkMonitor.DTOs;
 using NetworkMonitor.Objects;
 using NetworkMonitor.Security;
 using Microsoft.Extensions.Configuration;
-using NetworkMonitor.Maui.Services;
+using NetworkMonitor.Maui.Helpers;
 using NetworkMonitor.Maui;
 
 
@@ -50,6 +50,7 @@ namespace NetworkMonitor.Maui.Services
         private readonly object _lifecycleLock = new();
         private Task<ResultObj>? _startTask;
         private Task<ResultObj>? _stopTask;
+        private AndroidMemoryTelemetryHelper? _memoryTelemetry;
 
         public const string ServiceBroadcastAction = "com.networkmonitor.service.STATUS";
         public const string ServiceStatusExtra = "ServiceStatus";
@@ -84,6 +85,8 @@ namespace NetworkMonitor.Maui.Services
             _browserHost = _rootProvider.ServiceProvider.GetRequiredService<IBrowserHost>();
             _protectedConfigManager = _rootProvider.ServiceProvider.GetRequiredService<IProtectedConfigManager>();
             _assetReadyService = _rootProvider.ServiceProvider.GetRequiredService<IAssetReadyService>();
+            _memoryTelemetry ??= new AndroidMemoryTelemetryHelper(_logger, TimeSpan.FromSeconds(30));
+            _memoryTelemetry.Start();
         }
         private async Task StartAsync()
         {
@@ -279,6 +282,9 @@ private void CreateNotificationChannel()
         {
             try
             {
+                _memoryTelemetry?.Stop();
+                _memoryTelemetry?.Dispose();
+                _memoryTelemetry = null;
                 Task.Run(async () =>
                 {
                     await StopAsync();
