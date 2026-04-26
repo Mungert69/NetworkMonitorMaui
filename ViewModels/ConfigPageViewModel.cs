@@ -68,7 +68,7 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 var confirmed = await _dialogService.DisplayAlert(
                     "Reset agent configuration?",
-                    "This will delete appsettings.json and .env from the agent storage and disable the agent until you close and reopen the app. Do you want to continue?",
+                    "This will delete appsettings.json, .env, ProcessorDataObj, and MonitorIPs/MonitorIPS from the agent storage and disable the agent until you close and reopen the app. Do you want to continue?",
                     "Reset",
                     "Cancel");
 
@@ -77,19 +77,23 @@ namespace NetworkMonitor.Maui.ViewModels
                     return;
                 }
 
-                var envPath = Path.Combine(_appDataDirectory, ".env");
-                var appSettingsPath = Path.Combine(_appDataDirectory, "appsettings.json");
-
                 var warnings = new List<string>();
-
-                if (!TryDeleteFile(envPath, warnings, ".env"))
+                var resetFiles = new (string FileName, string DisplayName)[]
                 {
-                    _logger.LogWarning("Unable to delete environment file during reset: {Path}", envPath);
-                }
+                    (".env", ".env"),
+                    ("appsettings.json", "appsettings.json"),
+                    ("ProcessorDataObj", "ProcessorDataObj"),
+                    ("MonitorIPs", "MonitorIPs"),
+                    ("MonitorIPS", "MonitorIPS")
+                };
 
-                if (!TryDeleteFile(appSettingsPath, warnings, "appsettings.json"))
+                foreach (var resetFile in resetFiles)
                 {
-                    _logger.LogWarning("Unable to delete appsettings file during reset: {Path}", appSettingsPath);
+                    var filePath = Path.Combine(_appDataDirectory, resetFile.FileName);
+                    if (!TryDeleteFile(filePath, warnings, resetFile.DisplayName))
+                    {
+                        _logger.LogWarning("Unable to delete {DisplayName} during reset: {Path}", resetFile.DisplayName, filePath);
+                    }
                 }
 
                 try

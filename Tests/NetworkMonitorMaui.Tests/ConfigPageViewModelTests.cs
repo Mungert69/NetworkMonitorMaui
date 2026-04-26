@@ -90,8 +90,14 @@ public class ConfigPageViewModelTests : ViewModelTestBase
 
             var envPath = Path.Combine(tempDir.FullName, ".env");
             var appSettingsPath = Path.Combine(tempDir.FullName, "appsettings.json");
+            var processorDataPath = Path.Combine(tempDir.FullName, "ProcessorDataObj");
+            var monitorIpsPath = Path.Combine(tempDir.FullName, "MonitorIPs");
+            var legacyMonitorIpsPath = Path.Combine(tempDir.FullName, "MonitorIPS");
             File.WriteAllText(envPath, "AuthKey=old");
             File.WriteAllText(appSettingsPath, "{}");
+            File.WriteAllText(processorDataPath, "state");
+            File.WriteAllText(monitorIpsPath, "state");
+            File.WriteAllText(legacyMonitorIpsPath, "state");
 
             var dialog = new TestDialogService { NextConfirmationResult = true };
             var dispatcher = new TestDispatcher();
@@ -111,6 +117,9 @@ public class ConfigPageViewModelTests : ViewModelTestBase
             Assert.Equal(1, dialog.ConfirmationRequests);
             Assert.False(File.Exists(envPath));
             Assert.False(File.Exists(appSettingsPath));
+            Assert.False(File.Exists(processorDataPath));
+            Assert.False(File.Exists(monitorIpsPath));
+            Assert.False(File.Exists(legacyMonitorIpsPath));
             Assert.Equal(string.Empty, config.AuthKey);
             Assert.Equal(string.Empty, config.RabbitPassword);
             Assert.False(config.AgentUserFlow.IsAuthorized);

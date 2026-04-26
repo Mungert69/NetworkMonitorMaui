@@ -1,5 +1,6 @@
 #if ANDROID
-using System.Diagnostics;
+using System.IO;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace NetworkMonitor.Maui.Helpers;
@@ -7,54 +8,33 @@ namespace NetworkMonitor.Maui.Helpers;
 internal sealed class AndroidMemoryTelemetryHelper : IDisposable
 {
     private readonly ILogger _logger;
-    private readonly TimeSpan _interval;
-    private System.Timers.Timer? _timer;
+    private int _isSampling;
 
-    public AndroidMemoryTelemetryHelper(ILogger logger, TimeSpan interval)
+    public AndroidMemoryTelemetryHelper(ILogger logger)
     {
         _logger = logger;
-        _interval = interval;
     }
 
-    public void Start()
+    public void Sample()
     {
+        if (Interlocked.Exchange(ref _isSampling, 1) == 1)
+        {
+            return;
+        }
+
         try
         {
-            Stop();
-            _timer = new System.Timers.Timer(_interval.TotalMilliseconds);
-            _timer.AutoReset = true;
-            _timer.Elapsed += (_, _) => LogMemoryTelemetry();
-            _timer.Start();
             LogMemoryTelemetry();
         }
-        catch (Exception ex)
+        finally
         {
-            _logger.LogWarning(ex, "Failed to start memory telemetry timer.");
-        }
-    }
-
-    public void Stop()
-    {
-        try
-        {
-            if (_timer == null)
-            {
-                return;
-            }
-
-            _timer.Stop();
-            _timer.Dispose();
-            _timer = null;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to stop memory telemetry timer.");
+            Volatile.Write(ref _isSampling, 0);
         }
     }
 
     public void Dispose()
     {
-        Stop();
+        // Nothing to dispose. Sampling is driven by the processor polling loop.
     }
 
     private void LogMemoryTelemetry()
@@ -62,55 +42,58 @@ internal sealed class AndroidMemoryTelemetryHelper : IDisposable
         try
         {
             var managedBytes = GC.GetTotalMemory(forceFullCollection: false);
-            var proc = Process.GetCurrentProcess();
-            var workingSetBytes = proc.WorkingSet64;
-
-            long javaUsedBytes = -1;
-            long javaMaxBytes = -1;
-            try
-            {
-                var runtime = Java.Lang.Runtime.GetRuntime();
-                javaUsedBytes = runtime.TotalMemory() - runtime.FreeMemory();
-                javaMaxBytes = runtime.MaxMemory();
-            }
-            catch
-            {
-                // Best-effort telemetry only.
-            }
-
-            int totalPssKb = -1;
-            int dalvikPssKb = -1;
-            int nativePssKb = -1;
-            int otherPssKb = -1;
-            try
-            {
-                using var memInfo = new Android.OS.Debug.MemoryInfo();
-                Android.OS.Debug.GetMemoryInfo(memInfo);
-                totalPssKb = memInfo.TotalPss;
-                dalvikPssKb = memInfo.DalvikPss;
-                nativePssKb = memInfo.NativePss;
-                otherPssKb = memInfo.OtherPss;
-            }
-            catch
-            {
-                // Best-effort telemetry only.
-            }
+            var status = ReadProcStatus();
+            var threadPoolThreads = ThreadPool.ThreadCount;
 
             _logger.LogInformation(
-                "MEMORY TELEMETRY: managed={ManagedMB:F1}MB workingSet={WorkingSetMB:F1}MB javaUsed={JavaUsedMB:F1}MB javaMax={JavaMaxMB:F1}MB pssTotal={PssTotalMB:F1}MB pssDalvik={PssDalvikMB:F1}MB pssNative={PssNativeMB:F1}MB pssOther={PssOtherMB:F1}MB",
+                "MEMORY TELEMETRY: managed={ManagedMB:F1}MB workingSet={WorkingSetMB:F1}MB vmData={VmDataMB:F1}MB threads={Threads} threadPool={ThreadPoolThreads}",
                 BytesToMb(managedBytes),
-                BytesToMb(workingSetBytes),
-                BytesToMb(javaUsedBytes),
-                BytesToMb(javaMaxBytes),
-                KbToMb(totalPssKb),
-                KbToMb(dalvikPssKb),
-                KbToMb(nativePssKb),
-                KbToMb(otherPssKb));
+                KbToMb(status.WorkingSetKb),
+                KbToMb(status.VmDataKb),
+                status.Threads,
+                threadPoolThreads);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to collect memory telemetry.");
         }
+    }
+
+    private static (int WorkingSetKb, int VmDataKb, int Threads) ReadProcStatus()
+    {
+        const string statusPath = "/proc/self/status";
+        int workingSetKb = -1;
+        int vmDataKb = -1;
+        int threads = -1;
+
+        foreach (var line in File.ReadLines(statusPath))
+        {
+            if (line.StartsWith("VmRSS:", StringComparison.Ordinal))
+            {
+                workingSetKb = ParseLeadingInt(line);
+            }
+            else if (line.StartsWith("VmData:", StringComparison.Ordinal))
+            {
+                vmDataKb = ParseLeadingInt(line);
+            }
+            else if (line.StartsWith("Threads:", StringComparison.Ordinal))
+            {
+                threads = ParseLeadingInt(line);
+            }
+        }
+
+        return (workingSetKb, vmDataKb, threads);
+    }
+
+    private static int ParseLeadingInt(string line)
+    {
+        var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2)
+        {
+            return -1;
+        }
+
+        return int.TryParse(parts[1], out var value) ? value : -1;
     }
 
     private static double BytesToMb(long value)
