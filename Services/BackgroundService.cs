@@ -80,7 +80,7 @@ namespace NetworkMonitor.Maui.Services
                 try
                 {
                     await _assetReadyService.EnsureAssetsReadyAsync();
-                    result = await _rabbitRepo.ConnectAndSetUp(startupToken, maxRetriesOverride: 3);
+                    result = await _rabbitRepo.ConnectAndSetUp(startupToken);
                     if (!result.Success)
                     {
                         _isRunning = false;
@@ -96,7 +96,7 @@ namespace NetworkMonitor.Maui.Services
 #endif
                     _monitorPingProcessor = new MonitorPingProcessor(_loggerFactory.CreateLogger<MonitorPingProcessor>(), _netConfig, _connectFactory, _fileRepo, _rabbitRepo, _processorStates, _protectedConfigManager, _monitorPingInfoView);
                     _rabbitListener = new RabbitListener(_monitorPingProcessor, _loggerFactory.CreateLogger<RabbitListener>(), _netConfig, _processorStates, _cmdProcessorProvider, _connectProvider);
-                    var resultListener = await _rabbitListener.Setup(startupToken, maxRetriesOverride: 3);
+                    var resultListener = await _rabbitListener.Setup(startupToken);
                     var resultProcessor = await _monitorPingProcessor.Init(new ProcessorInitObj());
                     result.Message += resultCmdProcessorFactory.Message + resultConnectProvider.Message + resultListener.Message + resultProcessor.Message;
                     result.Success = resultCmdProcessorFactory.Success && resultConnectProvider.Success && resultProcessor.Success && resultListener.Success;
