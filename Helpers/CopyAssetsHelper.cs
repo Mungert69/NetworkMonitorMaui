@@ -21,6 +21,8 @@ namespace NetworkMonitor.Maui;
 
 public class CopyAssetsHelper
 {
+    private const int MaxConcurrentAssetCopies = 4;
+
     private static readonly HashSet<string> AlwaysOverwriteAssets = new(StringComparer.OrdinalIgnoreCase)
     {
         "AlgoTable.csv",
@@ -34,49 +36,57 @@ public class CopyAssetsHelper
     private static async Task<string> CopyAssetType(string assetType, bool setPerms, string directoryName, string[] assetFiles, string localPath, IProgress<string>? progress)
     {
         var outputStr = new StringBuilder();
+        using var copyThrottle = new SemaphoreSlim(MaxConcurrentAssetCopies);
         var copyTasks = assetFiles.Select(async assetFile =>
         {
-            string assetFilePath = Path.Combine(directoryName, assetFile);
-            string localFilePath = Path.Combine(localPath, assetFile);
-
+            await copyThrottle.WaitAsync();
             try
             {
-                var fileName = Path.GetFileName(localFilePath);
-                var alwaysOverwrite = AlwaysOverwriteAssets.Contains(fileName);
+                string assetFilePath = Path.Combine(directoryName, assetFile);
+                string localFilePath = Path.Combine(localPath, assetFile);
 
-                if (File.Exists(localFilePath) && !alwaysOverwrite)
+                try
                 {
-                    // Compare file size before copying
-                    using var stream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
-                    if (new FileInfo(localFilePath).Length == stream.Length)
+                    var fileName = Path.GetFileName(localFilePath);
+                    var alwaysOverwrite = AlwaysOverwriteAssets.Contains(fileName);
+
+                    if (File.Exists(localFilePath) && !alwaysOverwrite)
                     {
-                        progress?.Report($"Skipped {assetType}: {assetFile}");
-                        return $"Skipped {assetType} file: {assetFile} (Already up-to-date)";
+                        // Compare file size before copying
+                        using var stream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
+                        if (new FileInfo(localFilePath).Length == stream.Length)
+                        {
+                            return $"Skipped {assetType} file: {assetFile} (Already up-to-date)";
+                        }
                     }
+
+                    // Ensure the directory exists
+                    Directory.CreateDirectory(Path.GetDirectoryName(localFilePath)!);
+
+                    // Copy file
+                    using var sourceStream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
+                    using var targetStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true);
+                    await sourceStream.CopyToAsync(targetStream);
+
+                    if (setPerms && IsBinary(assetFile, out string binaryType))
+                    {
+                        SetExecutablePermission(localFilePath);
+                        progress?.Report($"Copied {binaryType}: {assetFile}");
+                        return $"Permission set for {binaryType}: {localFilePath}";
+                    }
+
+                    progress?.Report($"Copied {assetType}: {assetFile}");
+                    return $"Copied {assetType} file: {assetFile}";
                 }
-
-                // Ensure the directory exists
-                Directory.CreateDirectory(Path.GetDirectoryName(localFilePath)!);
-
-                // Copy file
-                using var sourceStream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
-                using var targetStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true);
-                await sourceStream.CopyToAsync(targetStream);
-
-                if (setPerms && IsBinary(assetFile, out string binaryType))
+                catch (Exception e)
                 {
-                    SetExecutablePermission(localFilePath);
-                    progress?.Report($"Copied {binaryType}: {assetFile}");
-                    return $"Permission set for {binaryType}: {localFilePath}";
+                    progress?.Report($"Error copying {assetType}: {assetFile}");
+                    return $"Error copying {assetType} file {assetFile}: {e.Message}";
                 }
-
-                progress?.Report($"Copied {assetType}: {assetFile}");
-                return $"Copied {assetType} file: {assetFile}";
             }
-            catch (Exception e)
+            finally
             {
-                progress?.Report($"Error copying {assetType}: {assetFile}");
-                return $"Error copying {assetType} file {assetFile}: {e.Message}";
+                copyThrottle.Release();
             }
         });
 
