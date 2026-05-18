@@ -60,7 +60,7 @@ namespace NetworkMonitor.Maui.Services
                 ServiceInitializer.RootProvider.AssetsReady = true;
                 _isReady = true;
                 ReportProgress("Assets ready.");
-                _logger.LogInformation("Asset copy completed. {Output}", output);
+                _logger.LogInformation("Asset copy completed. Output length: {OutputLength}", output.Length);
             }
             catch (Exception ex)
             {

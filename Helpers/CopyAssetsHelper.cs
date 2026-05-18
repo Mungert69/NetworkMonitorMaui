@@ -63,10 +63,7 @@ public class CopyAssetsHelper
                     // Ensure the directory exists
                     Directory.CreateDirectory(Path.GetDirectoryName(localFilePath)!);
 
-                    // Copy file
-                    using var sourceStream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
-                    using var targetStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true);
-                    await sourceStream.CopyToAsync(targetStream);
+                    await CopyAppPackageFileAsync(assetFilePath, localFilePath);
 
                     if (setPerms && IsBinary(assetFile, out string binaryType))
                     {
@@ -134,10 +131,6 @@ public class CopyAssetsHelper
             outputStr.AppendLine($"Directory copied to: {csLocalPath}");
             outputStr.Append(ListCopiedFiles(csAssetDir));
 
-#if WINDOWS
-            dllAssetDirectoryName = "windows" + dllAssetDirectoryName;
-#endif
-
             outputStr.AppendLine($"Starting dll copy from : {dllAssetDirectoryName}");
             string dllAssetDir = Path.Combine("openssl", "bin", "dlls");
             var (dllAssetFiles, dllListOutput) = await ListAssetFiles(dllAssetDirectoryName);
@@ -156,6 +149,22 @@ public class CopyAssetsHelper
             outputStr.AppendLine($"Error copying assets: {ex.Message}");
         }
         return outputStr.ToString();
+    }
+
+    private static async Task CopyAppPackageFileAsync(string assetFilePath, string localFilePath)
+    {
+        try
+        {
+            using var sourceStream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
+            using var targetStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true);
+            await sourceStream.CopyToAsync(targetStream);
+        }
+        catch (NotSupportedException)
+        {
+            using var sourceStream = await FileSystem.OpenAppPackageFileAsync(assetFilePath);
+            using var targetStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: false);
+            sourceStream.CopyTo(targetStream);
+        }
     }
 
     private static bool IsBinary(string assetFile, out string binaryType)
