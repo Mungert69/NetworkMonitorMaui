@@ -56,7 +56,8 @@ namespace NetworkMonitor.Maui.Services
 
                 string versionStr = string.IsNullOrEmpty(os) ? opensslVersion : $"{opensslVersion}-{os}";
                 var progress = new InlineProgress(ReportProgress);
-                string output = await CopyAssetsHelper.CopyAssetsToLocalStorage(versionStr, "cs-assets", "dlls", progress);
+                var dllAssetDir = OperatingSystem.IsWindows() ? "windowsdlls" : "dlls";
+                string output = await CopyAssetsHelper.CopyAssetsToLocalStorage(versionStr, "cs-assets", dllAssetDir, progress);
                 ServiceInitializer.RootProvider.AssetsReady = true;
                 _isReady = true;
                 ReportProgress("Assets ready.");
