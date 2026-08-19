@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 using NetworkMonitor.Objects;
 using NetworkMonitor.Maui.Services;
 namespace NetworkMonitor.Maui.Controls;
+
 public class AgentIndicator : ContentView
 {
 
     private BoxView circle;
-    private IColorResource  ColorResource = ServiceInitializer.RootProvider.ColorResource;
+    private IColorResource ColorResource = ServiceInitializer.RootProvider.ColorResource;
     private CancellationTokenSource _animationCts = new();
     private readonly IUiDispatcher _dispatcher = ServiceInitializer.Dispatcher;
     private bool _isLoaded = false;
@@ -33,14 +34,14 @@ public class AgentIndicator : ContentView
 
     public AgentIndicator()
     {
-       
+
         circle = new BoxView
         {
             WidthRequest = 25,
             HeightRequest = 25,
             CornerRadius = 12,
             Color = ColorResource.GetResourceColor("Error"),
-            Background=new Microsoft.Maui.Graphics.Color(0, 0, 0, 0)
+            Background = new Microsoft.Maui.Graphics.Color(0, 0, 0, 0)
         };
 
 
@@ -145,6 +146,6 @@ public class AgentIndicator : ContentView
         _animationCts = new CancellationTokenSource();
     }
 
-    
+
 
 }

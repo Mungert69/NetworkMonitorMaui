@@ -2,7 +2,7 @@ using NetworkMonitor.Objects;
 using NetworkMonitor.Maui.Controls;
 namespace NetworkMonitor.Maui.Services
 {
-   
+
     public interface IRootNamespaceProvider
     {
         Type MainActivity { get; }

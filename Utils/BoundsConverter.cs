@@ -8,7 +8,8 @@ using NetworkMonitor.Maui.ViewModels;
 using NetworkMonitor.DTOs;
 
 namespace NetworkMonitor.Maui.Utils;
- public class BoundsConverter : IValueConverter
+
+public class BoundsConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {

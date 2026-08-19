@@ -104,10 +104,10 @@ namespace NetworkMonitor.Maui.ViewModels
             try
             {
                 TResultObj<DataObj> result;
-                var hostObject = new HostObject { Address = Address, Port = Port, EndPointType = _internalEndpointType, Timeout=59000 }; // Use internal type
+                var hostObject = new HostObject { Address = Address, Port = Port, EndPointType = _internalEndpointType, Timeout = 59000 }; // Use internal type
                 result = await EndPointTypeFactory.TestConnection(_internalEndpointType, _apiService, hostObject, Address, Port);
 
-               
+
                 ResultMessage = result.Success ? "Connection successful" : "Connection failed";
                 var data = result.Data;
                 if (data != null)

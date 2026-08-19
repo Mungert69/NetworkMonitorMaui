@@ -24,7 +24,7 @@ namespace NetworkMonitor.Maui.Services
         Task StartBackgroundService();
         Task StopBackgroundService();
         bool IsServiceStarted { get; set; }
-        bool IsAuthorised { get;  }
+        bool IsAuthorised { get; }
         string ServiceMessage { get; set; }
         Task ChangeServiceState(bool state);
         //void OnServiceStateChanged();
@@ -70,16 +70,16 @@ namespace NetworkMonitor.Maui.Services
         }
         public bool IsAuthorised
         {
-            get => _netConfig.Owner!="usersetup" && _isServiceStarted;
-           
+            get => _netConfig.Owner != "usersetup" && _isServiceStarted;
+
         }
-       /* protected void OnServiceStateChanged()
-        {
-            ServiceStateChanged?.Invoke(this, EventArgs.Empty);
-        }*/
+        /* protected void OnServiceStateChanged()
+         {
+             ServiceStateChanged?.Invoke(this, EventArgs.Empty);
+         }*/
 
 
-        public PlatformService( ILogger<PlatformService> logger, NetConnectConfig netConfig)
+        public PlatformService(ILogger<PlatformService> logger, NetConnectConfig netConfig)
         {
             //_dialogService = dialogService;
 
@@ -125,12 +125,12 @@ namespace NetworkMonitor.Maui.Services
         {
             return Task.CompletedTask;
         }
-          public virtual bool RequestPermissionsAsync()
+        public virtual bool RequestPermissionsAsync()
         {
             return true;
         }
 
-       public virtual void OnUpdateServiceState(ResultObj result, bool state){}
+        public virtual void OnUpdateServiceState(ResultObj result, bool state) { }
         public string ServiceMessage { get => _serviceMessage; set => _serviceMessage = value; }
         public bool DisableAgentOnServiceShutdown { get => _disableAgentOnServiceShutdown; set => _disableAgentOnServiceShutdown = value; }
     }
@@ -141,7 +141,7 @@ namespace NetworkMonitor.Maui.Services
         private TaskCompletionSource<bool> _serviceOperationCompletionSource;
         private const int BlePermissionRequestCode = 1201;
 
-        public AndroidPlatformService( ILogger<PlatformService> logger, NetConnectConfig netConfig) : base( logger, netConfig)
+        public AndroidPlatformService(ILogger<PlatformService> logger, NetConnectConfig netConfig) : base(logger, netConfig)
         {
             try
             {
@@ -166,21 +166,23 @@ namespace NetworkMonitor.Maui.Services
         public override bool RequestPermissionsAsync()
         {
             try
-            {         
+            {
                 if (Build.VERSION.SdkInt >= BuildVersionCodes.M)
                 {
 #pragma warning disable CA1416
-var powerService=Context.PowerService;
-                    if (powerService!=null) {
-                        var powerManager = (PowerManager?)Platform.CurrentActivity?.GetSystemService(powerService);
-                    if (powerManager!=null && !powerManager.IsIgnoringBatteryOptimizations(Platform.CurrentActivity?.PackageName))
+                    var powerService = Context.PowerService;
+                    if (powerService != null)
                     {
-                        var intentBattery = new Intent(Settings.ActionRequestIgnoreBatteryOptimizations);
-                        if (Platform.CurrentActivity!=null){
-                             intentBattery.SetData(Android.Net.Uri.Parse("package:" + Platform.CurrentActivity.PackageName));
-                        Platform.CurrentActivity.StartActivity(intentBattery);
-                        }
-                       
+                        var powerManager = (PowerManager?)Platform.CurrentActivity?.GetSystemService(powerService);
+                        if (powerManager != null && !powerManager.IsIgnoringBatteryOptimizations(Platform.CurrentActivity?.PackageName))
+                        {
+                            var intentBattery = new Intent(Settings.ActionRequestIgnoreBatteryOptimizations);
+                            if (Platform.CurrentActivity != null)
+                            {
+                                intentBattery.SetData(Android.Net.Uri.Parse("package:" + Platform.CurrentActivity.PackageName));
+                                Platform.CurrentActivity.StartActivity(intentBattery);
+                            }
+
                         }
                     }
 #pragma warning restore CA1416
@@ -259,19 +261,21 @@ var powerService=Context.PowerService;
 
             try
             {
-                 Android.Content.Intent? intent = new Android.Content.Intent(Android.App.Application.Context,typeof(AndroidBackgroundService));
-                if (intent!=null && Android.App.Application.Context!=null){
-                     if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+                Android.Content.Intent? intent = new Android.Content.Intent(Android.App.Application.Context, typeof(AndroidBackgroundService));
+                if (intent != null && Android.App.Application.Context != null)
                 {
+                    if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+                    {
                         Android.App.Application.Context.StartForegroundService(intent);
+                    }
+                    else
+                    {
+
+                        Android.App.Application.Context.StartService(intent);
+                    }
                 }
-                else{
-  
-                          Android.App.Application.Context.StartService(intent);
-                }
-                }
-                
-               
+
+
                 //_serviceMessage = " Android Service started successfully.";
                 //_isServiceStarted=true;
 
@@ -290,13 +294,14 @@ var powerService=Context.PowerService;
 
             try
             {
-                if (Platform.CurrentActivity!=null){
-                       var intent = new Intent(Platform.CurrentActivity, typeof(AndroidBackgroundService));
-                Platform.CurrentActivity.StopService(intent);
-                //_serviceMessage = " Android Service stopped successfully.";
-                //_isServiceStarted=false;
+                if (Platform.CurrentActivity != null)
+                {
+                    var intent = new Intent(Platform.CurrentActivity, typeof(AndroidBackgroundService));
+                    Platform.CurrentActivity.StopService(intent);
+                    //_serviceMessage = " Android Service stopped successfully.";
+                    //_isServiceStarted=false;
                 }
-             
+
 
                 return _serviceOperationCompletionSource.Task;
             }
@@ -308,37 +313,37 @@ var powerService=Context.PowerService;
             }
         }
 
-        public  override void OnUpdateServiceState(ResultObj result, bool state)
+        public override void OnUpdateServiceState(ResultObj result, bool state)
         {
-                 try
+            try
             {
-                     // Update PlatformService properties
-                    if (result.Success)
-                    {
-                        IsServiceStarted = state;
-                        ServiceMessage = IsServiceStarted ? "Started agent." : "Stopped agent.";
-                        _logger.LogInformation(ServiceMessage);
-                        _serviceOperationCompletionSource?.TrySetResult(true);
-                    }
-                    else
-                    {
-                        var stateStr = state ? "start" : "stop";
-                        ServiceMessage = $"Agent failed to {stateStr}: {result.Message}";
-                        _logger.LogError(ServiceMessage);
-                        _serviceOperationCompletionSource?.TrySetResult(false);
+                // Update PlatformService properties
+                if (result.Success)
+                {
+                    IsServiceStarted = state;
+                    ServiceMessage = IsServiceStarted ? "Started agent." : "Stopped agent.";
+                    _logger.LogInformation(ServiceMessage);
+                    _serviceOperationCompletionSource?.TrySetResult(true);
+                }
+                else
+                {
+                    var stateStr = state ? "start" : "stop";
+                    ServiceMessage = $"Agent failed to {stateStr}: {result.Message}";
+                    _logger.LogError(ServiceMessage);
+                    _serviceOperationCompletionSource?.TrySetResult(false);
 
-                    }
+                }
 
-                    // OnServiceStateChanged();
+                // OnServiceStateChanged();
 
-                    // Optionally, notify the UI or log the status
+                // Optionally, notify the UI or log the status
                 RaiseServiceStateChanged();
             }
             catch (Exception e)
             {
                 _logger.LogError($" Error : failed to run OnUpdateServiceState  . Error was : {e.Message}");
             }
-    
+
         }
 
         private class ServiceStatusReceiver : Android.Content.BroadcastReceiver
@@ -409,7 +414,7 @@ var powerService=Context.PowerService;
     {
         private IBackgroundService _backgroundService;
 
-        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger, NetConnectConfig netConfig) : base( logger, netConfig)
+        public WindowsPlatformService(IBackgroundService backgroundService, ILogger<PlatformService> logger, NetConnectConfig netConfig) : base(logger, netConfig)
         {
             _backgroundService = backgroundService;
         }
@@ -447,11 +452,11 @@ var powerService=Context.PowerService;
             try
             {
                 var result = await _backgroundService.Start();
-                    if (result.Success)
-                    {
-                        _serviceMessage = "Started agent.";
-                    }
-                    else _serviceMessage = $"Agent failed to start: {result.Message}";
+                if (result.Success)
+                {
+                    _serviceMessage = "Started agent.";
+                }
+                else _serviceMessage = $"Agent failed to start: {result.Message}";
                 if (result.Success) _isServiceStarted = true;
                 RaiseServiceStateChanged();
             }

@@ -203,7 +203,7 @@ namespace NetworkMonitor.Maui.ViewModels
             });
         }
 
-       
+
         private void UpdatePopupMessage(string? propertyName)
         {
             // Logic to update PopupMessage based on propertyName

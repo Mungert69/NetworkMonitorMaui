@@ -34,7 +34,8 @@ namespace NetworkMonitor.Maui.ViewModels
             IUiDispatcher? dispatcher = null,
             string? appDataDirectory = null)
         {
-            try {
+            try
+            {
                 _logger = logger;
                 _netConfig = netConfig;
                 _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
@@ -44,7 +45,7 @@ namespace NetworkMonitor.Maui.ViewModels
                 _appDataDirectory = ResolveAppDataDirectory(appDataDirectory);
                 _netConfig.PropertyChanged += NetConfig_PropertyChanged;
                 ResetCommand = new Command(async () => await ResetToDefaultsAsync(), () => !_isResetting);
-                  }
+            }
             catch (Exception ex)
             {
                 _logger?.LogError($" Error : initializing ConfigPageViewModel. Error was: {ex}");
@@ -148,7 +149,7 @@ namespace NetworkMonitor.Maui.ViewModels
             finally
             {
                 _isResetting = false;
-               // UpdateResetCommandCanExecute();
+                // UpdateResetCommandCanExecute();
             }
         }
 
@@ -200,44 +201,44 @@ namespace NetworkMonitor.Maui.ViewModels
             {
                 _dispatcher.Dispatch(() =>
                 {
-                switch (e.PropertyName)
-                {
-                    case nameof(NetConnectConfig.BaseFusionAuthURL):
-                        OnPropertyChanged(nameof(BaseFusionAuthURL));
-                        break;
-                    case nameof(NetConnectConfig.ClientId):
-                        OnPropertyChanged(nameof(ClientId));
-                        break;
-                    case nameof(NetConnectConfig.LocalSystemUrl):
-                        OnPropertyChanged(nameof(LocalSystemUrlDisplay));
-                        break;
-                    case nameof(NetConnectConfig.AppID):
-                        OnPropertyChanged(nameof(AppID));
-                        break;
-                    case nameof(NetConnectConfig.FilterStrategies):
-                        OnPropertyChanged(nameof(FilterStrategies));
-                        break;
-                    case nameof(NetConnectConfig.OqsProviderPath):
-                        OnPropertyChanged(nameof(OqsProviderPath));
-                        break;
-                    case nameof(NetConnectConfig.ClientAuthUrl):
-                        OnPropertyChanged(nameof(ClientAuthUrl));
-                        break;
-                    case nameof(NetConnectConfig.AuthKey):
-                        OnPropertyChanged(nameof(AuthKey));
-                       // OnPropertyChanged(nameof(AuthKeyDisplay));
-                        break;
-                    case nameof(NetConnectConfig.Owner):
-                        OnPropertyChanged(nameof(Owner));
-                        break;
-                    case nameof(NetConnectConfig.MonitorLocation):
-                        OnPropertyChanged(nameof(MonitorLocation));
-                        break;
-                    default:
-                        // If the property name does not match any known properties, you might choose to log this or handle it as needed.
-                        // This could be useful for debugging or if you're expecting other properties to change that are not listed here.
-                        break;
-                }
+                    switch (e.PropertyName)
+                    {
+                        case nameof(NetConnectConfig.BaseFusionAuthURL):
+                            OnPropertyChanged(nameof(BaseFusionAuthURL));
+                            break;
+                        case nameof(NetConnectConfig.ClientId):
+                            OnPropertyChanged(nameof(ClientId));
+                            break;
+                        case nameof(NetConnectConfig.LocalSystemUrl):
+                            OnPropertyChanged(nameof(LocalSystemUrlDisplay));
+                            break;
+                        case nameof(NetConnectConfig.AppID):
+                            OnPropertyChanged(nameof(AppID));
+                            break;
+                        case nameof(NetConnectConfig.FilterStrategies):
+                            OnPropertyChanged(nameof(FilterStrategies));
+                            break;
+                        case nameof(NetConnectConfig.OqsProviderPath):
+                            OnPropertyChanged(nameof(OqsProviderPath));
+                            break;
+                        case nameof(NetConnectConfig.ClientAuthUrl):
+                            OnPropertyChanged(nameof(ClientAuthUrl));
+                            break;
+                        case nameof(NetConnectConfig.AuthKey):
+                            OnPropertyChanged(nameof(AuthKey));
+                            // OnPropertyChanged(nameof(AuthKeyDisplay));
+                            break;
+                        case nameof(NetConnectConfig.Owner):
+                            OnPropertyChanged(nameof(Owner));
+                            break;
+                        case nameof(NetConnectConfig.MonitorLocation):
+                            OnPropertyChanged(nameof(MonitorLocation));
+                            break;
+                        default:
+                            // If the property name does not match any known properties, you might choose to log this or handle it as needed.
+                            // This could be useful for debugging or if you're expecting other properties to change that are not listed here.
+                            break;
+                    }
                 });
             }
             catch (Exception ex)

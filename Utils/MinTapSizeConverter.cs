@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using Microsoft.Maui.Controls;
 namespace NetworkMonitor.Maui.Utils;
+
 public class MinTapSizeConverter : IValueConverter
 {
     private const double MinTapSize = 44; // Recommended minimum touch target

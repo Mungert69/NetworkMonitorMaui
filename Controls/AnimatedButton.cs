@@ -6,7 +6,7 @@ namespace NetworkMonitor.Maui.Controls
     {
         public AnimatedButton()
         {
-            Clicked += async (sender, e) => 
+            Clicked += async (sender, e) =>
             {
                 try
                 {

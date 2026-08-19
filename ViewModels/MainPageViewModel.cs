@@ -337,7 +337,7 @@ namespace NetworkMonitor.Maui.ViewModels
                         case nameof(AgentUserFlow.IsChatOpened):
                             UpdateTaskCompletion("Open Monitor Assistant", _netConfig.AgentUserFlow.IsChatOpened);
                             break;
-                            
+
                     }
                 });
             }
@@ -451,7 +451,7 @@ namespace NetworkMonitor.Maui.ViewModels
         }
         private async Task ExecuteOpenAssistantAsync()
         {
-           var result = await OpenAssistantAsync();
+            var result = await OpenAssistantAsync();
             if (result.Success && !string.IsNullOrWhiteSpace(result.Message))
             {
                 NavigateRequested?.Invoke(this, result.Message);

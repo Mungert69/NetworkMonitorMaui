@@ -1,26 +1,27 @@
 
 namespace NetworkMonitor.Maui.Utils;
 
-public class Utils {
-
-
-
-public static async Task<bool> RequestStoragePermissionsAsync()
+public class Utils
 {
-    var readStatus = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
-    var writeStatus = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
 
-    if (readStatus != PermissionStatus.Granted)
+
+
+    public static async Task<bool> RequestStoragePermissionsAsync()
     {
-        readStatus = await Permissions.RequestAsync<Permissions.StorageRead>();
-    }
+        var readStatus = await Permissions.CheckStatusAsync<Permissions.StorageRead>();
+        var writeStatus = await Permissions.CheckStatusAsync<Permissions.StorageWrite>();
 
-    if (writeStatus != PermissionStatus.Granted)
-    {
-        writeStatus = await Permissions.RequestAsync<Permissions.StorageWrite>();
-    }
+        if (readStatus != PermissionStatus.Granted)
+        {
+            readStatus = await Permissions.RequestAsync<Permissions.StorageRead>();
+        }
 
-    return readStatus == PermissionStatus.Granted && writeStatus == PermissionStatus.Granted;
-}
+        if (writeStatus != PermissionStatus.Granted)
+        {
+            writeStatus = await Permissions.RequestAsync<Permissions.StorageWrite>();
+        }
+
+        return readStatus == PermissionStatus.Granted && writeStatus == PermissionStatus.Granted;
+    }
 
 }

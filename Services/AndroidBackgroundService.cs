@@ -266,25 +266,25 @@ namespace NetworkMonitor.Maui.Services
             return StartCommandResult.Sticky;
         }
 
-private void CreateNotificationChannel()
-{
-    // Only on API 26+ (Oreo)
-    if ((int)Build.VERSION.SdkInt >= 26)
-    {
-        var channelNameJava = new Java.Lang.String(_channelName);
-        var channel = new NotificationChannel(_channelId, channelNameJava, NotificationImportance.Default)
+        private void CreateNotificationChannel()
         {
-            Description = _channelDescription
-        };
-        var managerObj = Platform.AppContext.GetSystemService(Context.NotificationService);
-        if (managerObj is NotificationManager manager)
-        {
-            manager.CreateNotificationChannel(channel);
-            _channelInitialized = true;
-            _logger.LogInformation($" SERVICE : created notification channel.");
+            // Only on API 26+ (Oreo)
+            if ((int)Build.VERSION.SdkInt >= 26)
+            {
+                var channelNameJava = new Java.Lang.String(_channelName);
+                var channel = new NotificationChannel(_channelId, channelNameJava, NotificationImportance.Default)
+                {
+                    Description = _channelDescription
+                };
+                var managerObj = Platform.AppContext.GetSystemService(Context.NotificationService);
+                if (managerObj is NotificationManager manager)
+                {
+                    manager.CreateNotificationChannel(channel);
+                    _channelInitialized = true;
+                    _logger.LogInformation($" SERVICE : created notification channel.");
+                }
+            }
         }
-    }
-}
 
         public override void OnDestroy()
         {

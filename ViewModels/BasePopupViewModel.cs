@@ -3,18 +3,18 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 namespace NetworkMonitor.Maui.ViewModels
 {
-    public class BasePopupViewModel: INotifyPropertyChanged
+    public class BasePopupViewModel : INotifyPropertyChanged
     {
         public ICommand ClosePopupCommand { get; protected set; }
         private bool _isPopupVisible;
-        private string _popupMessage="";
+        private string _popupMessage = "";
 
         public BasePopupViewModel()
         {
             ClosePopupCommand = new Command(() => IsPopupVisible = false);
         }
 
-         public bool IsPopupVisible
+        public bool IsPopupVisible
         {
             get => _isPopupVisible;
             set
@@ -23,7 +23,7 @@ namespace NetworkMonitor.Maui.ViewModels
                 OnPropertyChanged();
             }
         }
-         public string PopupMessage
+        public string PopupMessage
         {
             get => _popupMessage;
             set
@@ -33,7 +33,7 @@ namespace NetworkMonitor.Maui.ViewModels
             }
         }
 
-        
+
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

@@ -212,7 +212,7 @@ public class CopyAssetsHelper
             outputStr.AppendLine($"Attempting to set executable permission for: {filePath}");
 
 #if ANDROID
-        PermissionsHelper.MakeFileExecutable(filePath);
+            PermissionsHelper.MakeFileExecutable(filePath);
 #elif WINDOWS
 
                 outputStr.Append(ProcessFileForSymbolicLink(filePath));
