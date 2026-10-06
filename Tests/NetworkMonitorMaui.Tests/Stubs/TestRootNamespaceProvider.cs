@@ -18,6 +18,7 @@ public sealed class TestRootNamespaceProvider : IRootNamespaceProvider
         _colorResource = colorResource ?? new TestColorResource();
     }
 
+    public bool AssetsReady { get; set; }
     public Type MainActivity => typeof(object);
     public IServiceProvider ServiceProvider => _serviceProvider;
     public string GetAppDataDirectory() => Path.GetTempPath();

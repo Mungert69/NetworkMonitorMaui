@@ -15,6 +15,7 @@ public class ServiceInitializerTests : IDisposable
         public IServiceProvider ServiceProvider => new ServiceCollection().BuildServiceProvider();
         public string GetAppDataDirectory() => "/tmp";
         public IColorResource ColorResource => new StubColorResource();
+        public bool AssetsReady { get; set; }
         public Type MainActivity => typeof(object);
         public int GetDrawable(string drawableName) => 0;
 

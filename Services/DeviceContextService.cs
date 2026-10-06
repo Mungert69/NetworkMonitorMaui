@@ -10,11 +10,6 @@ using System.Threading.Tasks;
 
 namespace NetworkMonitor.Maui.Services
 {
-    public interface IDeviceContextService
-    {
-        Task RefreshAndPersistAsync();
-    }
-
     public sealed class DeviceContextService : IDeviceContextService
     {
         private readonly ILogger _logger;
