@@ -46,6 +46,7 @@ namespace NetworkMonitor.Maui.Services
         private string _channelDescription = "Quantum Network Monitor Agent notification channel";
         private bool _channelInitialized = false;
         private IBrowserHost _browserHost;
+        private IConnectCycleLifecycle _cycleLifecycle;
         private readonly object _lifecycleLock = new();
         private Task<ResultObj>? _startTask;
         private Task<ResultObj>? _stopTask;
@@ -81,6 +82,7 @@ namespace NetworkMonitor.Maui.Services
             _connectProvider = _rootProvider.ServiceProvider.GetRequiredService<IConnectProvider>();
             _platformService = _rootProvider.ServiceProvider.GetRequiredService<IPlatformService>();
             _browserHost = _rootProvider.ServiceProvider.GetRequiredService<IBrowserHost>();
+            _cycleLifecycle = _rootProvider.ServiceProvider.GetRequiredService<IConnectCycleLifecycle>();
             _protectedConfigManager = _rootProvider.ServiceProvider.GetRequiredService<IProtectedConfigManager>();
             _assetReadyService = _rootProvider.ServiceProvider.GetRequiredService<IAssetReadyService>();
         }
@@ -116,7 +118,8 @@ namespace NetworkMonitor.Maui.Services
                             _connectProvider,
                             _browserHost,
                             _protectedConfigManager,
-                            _assetReadyService);
+                            _assetReadyService,
+                            _cycleLifecycle);
                         _startTask = _backgroundService.Start();
                     }
                     startTask = _startTask;
