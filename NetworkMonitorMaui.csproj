@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+        <TargetFramework>net11.0-windows10.0.19041.0</TargetFramework>
         <UseMaui>true</UseMaui>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -8,7 +8,7 @@
         <AssemblyName>NetworkMonitorMaui</AssemblyName>
         <RootNamespace>NetworkMonitor.Maui</RootNamespace>
 
-        <ApplicationDisplayVersion>0.0.3</ApplicationDisplayVersion>
+        <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
         <ApplicationVersion>3</ApplicationVersion>
         <DefineConstants>WINDOWS</DefineConstants>
     </PropertyGroup>
@@ -23,8 +23,8 @@
        
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.14" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.14" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="11.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
         <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="MetroLog.Maui" Version="2.1.0" />
