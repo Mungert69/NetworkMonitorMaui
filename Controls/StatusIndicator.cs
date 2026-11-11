@@ -66,12 +66,14 @@ public class StatusIndicator : ContentView
         {
             Color = ColorResource.GetResourceColor("Error"),
             CornerRadius = 15,
+            BackgroundColor = Colors.Transparent,
         };
 
         _ripple = new BoxView
         {
             Color = ColorResource.GetResourceColor("Secondary"),
             CornerRadius = 15,
+            BackgroundColor = Colors.Transparent,
             Opacity = 0,
         };
 
